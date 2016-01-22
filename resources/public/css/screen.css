@@ -1,0 +1,143 @@
+body {
+    background: #FFFFFF;
+    color: #525952;
+    font-family: 'Helvetica Neue', Helvetica, Arial, serif;
+    font-size: 13px;
+    margin: 0;
+}
+
+main {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+h1 {
+    text-align: center;
+}
+
+
+nav#lognav {
+    line-height:20px;
+    text-align:right;
+    font-size: 12px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+nav#boxnav {
+    text-align:left;
+    font-size: 18px;
+    padding-left: 10px;
+    padding-right: 10px;
+    position: absolute;
+    bottom: 0;
+    font-family: Arial;
+
+}
+
+
+.row-list li {
+    display: inline;
+    padding-right: 20px;
+    margin-bottom: 0;
+}
+
+.navrow a {
+    color: darkblue;
+    text-decoration: none;
+}
+
+.navrow:hover a {
+    color: darkblue;
+    text-decoration: none;
+}
+
+
+footer {
+    color: #ffffff;
+    background: #142D44;
+    height: 100px;
+}
+
+
+ul.guests { padding-left: 30px; line-height: 1.1; }
+
+li.guests { margin-bottom: 10px; }
+
+p.guests { margin-bottom: 0; margin-top: 0; }
+
+time.guests { font-size: 10px; }
+
+cite.guests { font-size: 12px }
+
+
+.footBanner {
+    text-align: center;
+}
+
+
+.footMenu {
+    text-align: left;
+    padding-left: 50px;
+    style: "color:white"
+}
+
+a.footText {
+    color: white;
+    text-decoration: none;
+}
+
+a.footText:hover {
+    color: yellow;
+    text-decoration: none;
+}
+
+
+#snout {
+    float:left;
+    font-family: serif;
+    font-size: 20px;
+}
+
+.formbox {
+    border: 1px solid silver;
+    padding: 5px;
+    display: inline-block;
+    font-size: 10px;
+    vertical-align: middle;
+    text-align: left;
+}
+
+#homebox {
+    text-align: center;
+}
+
+#homeboxGap {
+    display: inline-block;
+    padding: 40px;
+}
+
+#flag {
+    float:right;
+    padding-right: 20px;
+}
+
+.head-box {
+    width: 100%;
+    position: relative;
+    padding-left: 10px;
+    padding-right: 10px;
+    height:100px;
+	  color: #0000c0;
+	  background: -webkit-gradient(linear,  left top,  left bottom,
+    	from(#c0f0ff), to(#ffffff)
+    	);
+}
+
+.error {
+    color: red;
+}
+
+.username {
+    color: blue;
+}
