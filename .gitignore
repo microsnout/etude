@@ -14,3 +14,4 @@ pom.xml
 *.sq3
 *.m4a
 *.txt
+.DS_Store
