@@ -2,7 +2,6 @@
 /lib
 /classes
 /checkouts
-/data
 /audio
 /text
 pom.xml
