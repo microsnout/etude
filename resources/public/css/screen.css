@@ -1,6 +1,6 @@
 body {
     background: #FFFFFF;
-    color: #525952;
+    color: #505050;
     font-family: 'Helvetica Neue', Helvetica, Arial, serif;
     font-size: 13px;
     margin: 0;
@@ -22,17 +22,21 @@ nav#lognav {
     font-size: 12px;
     padding-left: 10px;
     padding-right: 10px;
+    color: #cfcfcf;
+    background: #142D44;
 }
 
 nav#boxnav {
     text-align:left;
-    font-size: 18px;
-    padding-left: 10px;
-    padding-right: 10px;
+    padding-left: 0px;
+    padding-right: 0px;
     position: absolute;
     bottom: 0;
-    font-family: Arial;
 
+    font-family: "League Gothic";
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
 }
 
 
@@ -40,6 +44,7 @@ nav#boxnav {
     display: inline;
     padding-right: 20px;
     margin-bottom: 0;
+    padding-left: 0px;
 }
 
 .navrow a {
@@ -57,6 +62,7 @@ footer {
     color: #ffffff;
     background: #142D44;
     height: 100px;
+    padding-top: 5px;
 }
 
 
@@ -95,8 +101,10 @@ a.footText:hover {
 
 #snout {
     float:left;
-    font-family: serif;
-    font-size: 20px;
+    font-family: "Fanwood";
+    font-size: 40px;
+    font-style: italic;
+    padding-left: 36px;
 }
 
 .formbox {
@@ -110,6 +118,8 @@ a.footText:hover {
 
 #homebox {
     text-align: center;
+    padding-top: 140px;
+    padding-bottom: 140px;
 }
 
 #homeboxGap {
@@ -128,7 +138,7 @@ a.footText:hover {
     padding-left: 10px;
     padding-right: 10px;
     height:100px;
-	  color: #0000c0;
+	  color: darkblue;
 	  background: -webkit-gradient(linear,  left top,  left bottom,
     	from(#c0f0ff), to(#ffffff)
     	);
@@ -139,5 +149,19 @@ a.footText:hover {
 }
 
 .username {
-    color: blue;
+    color: grey;
+}
+
+#textbox {
+    border: 1px solid #009BE3;
+    height: 300px;
+    margin: 10px;
+    padding: 20px;
+    line-height: 1.6;
+
+    font-family: "Trebuchet MS";
+    font-weight: normal;
+    font-style: normal;
+    font-size: 14px;
+    color: black;
 }

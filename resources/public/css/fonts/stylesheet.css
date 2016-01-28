@@ -1,0 +1,69 @@
+/* Regular */
+@font-face {
+    font-family: 'League Gothic';
+    src: url('leaguegothic-italic-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+}
+
+/* Italic */
+@font-face {
+    font-family: 'League Gothic';
+    src: url('leaguegothic-regular-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+/** Linden Hill **/
+
+/* Italic */
+@font-face {
+    font-family: 'Linden Hill';
+    src: url('LindenHill-italic-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+}
+
+/* Regular */
+@font-face {
+    font-family: 'Linden Hill';
+    src: url('LindenHill-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+/** Fanwood **/
+
+/* Italic */
+@font-face {
+    font-family: 'Fanwood';
+    src: url('fanwood_italic-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Text Italic */
+@font-face {
+    font-family: 'Fanwood Text';
+    src: url('fanwood_text_italic-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+}
+
+/* Text */
+@font-face {
+    font-family: 'Fanwood Text';
+    src: url('fanwood_text-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Regular */
+@font-face {
+    font-family: 'Fanwood';
+    src: url('fanwood-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}

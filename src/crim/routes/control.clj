@@ -10,9 +10,9 @@
 
 (defn control []
   (layout/common
-     [:h1 "Control Center"]
      [:br]
-
+     [:div#textbox]
+     [:br]
    )
 )
 
@@ -27,8 +27,15 @@
    )
 )
 
+(defn ctl-get-text []
+  (str
+  (slurp "resources/public/data/crim/text/01_05.txt")
+  " <input type=\"text\" size=12> "
+  (slurp "resources/public/data/crim/text/01_07.txt")))
+
 
 (defroutes control-routes
- (GET "/control" [] (control))
- (GET "/userlist" [] (userlist))
+  (GET "/ctl-get-text" [] (ctl-get-text))
+  (GET "/control" [] (control))
+  (GET "/userlist" [] (userlist))
 )

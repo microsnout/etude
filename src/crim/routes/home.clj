@@ -41,13 +41,11 @@
   (if (session/get :user)
     (redirect "/control")
     (layout/common
-        [:h1 "Welcome to CRIM"]
-
         [:div#homebox
           (auth/show-login-form)
           [:div#homeboxGap ""]
           (auth/show-registration-form)]
-        [:br][:br]
+        [:br]
     )
   )
 )
@@ -71,4 +69,3 @@
  (GET "/guestbook" [] (guestbook))
  (POST "/guestbook" [message] (save-message message))
  )
-
