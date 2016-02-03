@@ -14,11 +14,11 @@
 
 (defn get-header []
   [:header {:width "100%"}
-   [:nav#lognav
+   [:nav#lognav.dark-back
       (get-login-status)
    ]
-   [:div#banner.head-box
-      [:div#snout {:height "100px"}
+   [:div#banner.header-box
+      [:div#site-logo {:height "100px"}
         "étude"]
       [:div#flag
         (image {:width "64", :height "64", :float 'right'} "/img/drapeau_Quebec.gif")]
@@ -31,7 +31,7 @@
 
 
 (defn get-footer []
-  [:footer
+  [:footer.dark-back
     [:div.footBanner "étude version 0.1"]
     [:nav.footMenu
        [:ul.row-list

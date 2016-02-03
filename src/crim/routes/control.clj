@@ -12,10 +12,22 @@
   (layout/common
      [:br]
      [:div#textbox]
-     [:br]
-   )
-)
+     [:div#controls
+        
+          [:ul.ctl-list
+            (map
+              (fn [id chr]
+                  [:li [:a {:role "button", :href "#", :id id} chr]])
+              ["stop" "back" "play-pause" "replay" "next" "loop"]
+              (map str (seq "37198(")))] 
 
+        [:span.vert-split]
+             
+        [:div.audio-player-progress
+          [:div.audio-player-progress-bar]]
+      ]
+  )
+)
 
 (defn userlist []
   (layout/common

@@ -6,16 +6,23 @@ body {
     margin: 0;
 }
 
+/* Main content area between the header and footers */
 main {
     padding-left: 10px;
     padding-right: 10px;
 }
 
+/* Defines dark backgound color used in header and footer */
+.dark-back {
+    background: #142D44;
+}
+
+/* Used by guestbook and users pages only */
 h1 {
     text-align: center;
 }
 
-
+/* Top line status bar with User: --- Login */
 nav#lognav {
     line-height:20px;
     text-align:right;
@@ -23,28 +30,69 @@ nav#lognav {
     padding-left: 10px;
     padding-right: 10px;
     color: #cfcfcf;
-    background: #142D44;
 }
 
+/* Banner box with blue gradient */
+.header-box {
+    width: 100%;
+    position: relative;
+    padding-left: 10px;
+    padding-right: 10px;
+    height:100px;
+      color: darkblue;
+      background: -webkit-gradient(linear,  left top,  left bottom,
+        from(#c0f0ff), to(#ffffff)
+        );
+}
+
+#flag {
+    float:right;
+    padding-right: 30px;
+    padding-top: 5px;
+}
+
+/* Site name logo: étude */
+#site-logo {
+    float:left;
+    font-family: "Fanwood";
+    font-size: 40px;
+    font-style: italic;
+    padding-left: 20px;
+    padding-top: 5px;
+}
+
+
+/* Navigation menu within banner box  */
 nav#boxnav {
     text-align:left;
-    padding-left: 0px;
+    padding-left: 20px;
     padding-right: 0px;
+    padding-bottom: 10px;
     position: absolute;
     bottom: 0;
 
     font-family: "League Gothic";
     font-weight: normal;
     font-style: normal;
-    font-size: 24px;
+    font-size: 20px;
 }
 
+
+/* Navigation menus for header and footers */
+
+.row-list {
+    margin-bottom: 0;
+    padding-left: 0;
+    margin-left: 0;
+    list-style: none;
+}
 
 .row-list li {
     display: inline;
     padding-right: 20px;
     margin-bottom: 0;
-    padding-left: 0px;
+    padding-left: 0;
+    margin-left: 0;
 }
 
 .navrow a {
@@ -58,24 +106,13 @@ nav#boxnav {
 }
 
 
+/* Footer stuff */
+
 footer {
     color: #ffffff;
-    background: #142D44;
     height: 100px;
     padding-top: 5px;
 }
-
-
-ul.guests { padding-left: 30px; line-height: 1.1; }
-
-li.guests { margin-bottom: 10px; }
-
-p.guests { margin-bottom: 0; margin-top: 0; }
-
-time.guests { font-size: 10px; }
-
-cite.guests { font-size: 12px }
-
 
 .footBanner {
     text-align: center;
@@ -99,13 +136,19 @@ a.footText:hover {
 }
 
 
-#snout {
-    float:left;
-    font-family: "Fanwood";
-    font-size: 40px;
-    font-style: italic;
-    padding-left: 36px;
-}
+/* Gustbook stuff */
+
+ul.guests { padding-left: 30px; line-height: 1.1; }
+
+li.guests { margin-bottom: 10px; }
+
+p.guests { margin-bottom: 0; margin-top: 0; }
+
+time.guests { font-size: 10px; }
+
+cite.guests { font-size: 12px }
+
+
 
 .formbox {
     border: 1px solid silver;
@@ -127,23 +170,6 @@ a.footText:hover {
     padding: 40px;
 }
 
-#flag {
-    float:right;
-    padding-right: 20px;
-}
-
-.head-box {
-    width: 100%;
-    position: relative;
-    padding-left: 10px;
-    padding-right: 10px;
-    height:100px;
-	  color: darkblue;
-	  background: -webkit-gradient(linear,  left top,  left bottom,
-    	from(#c0f0ff), to(#ffffff)
-    	);
-}
-
 .error {
     color: red;
 }
@@ -152,6 +178,8 @@ a.footText:hover {
     color: grey;
 }
 
+
+/* Main text display area */
 #textbox {
     border: 1px solid #009BE3;
     height: 300px;
@@ -164,4 +192,89 @@ a.footText:hover {
     font-style: normal;
     font-size: 14px;
     color: black;
+    border-radius: 10px;
+}
+
+
+#controls {
+    background-color: #e0f0ff;
+    margin-left: 6px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    line-height: 1.0;
+    font-family: "Guifx";
+    font-size: 20px;
+    border-radius: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+
+    display: -webkit-flex;
+    display: flex;
+}
+
+.ctl-list {
+    margin: 7px 0 3px 0;
+    padding-left: 0;
+    list-style: none;
+    color: darkblue;
+    text-decoration: none;
+    width: auto;
+}
+
+.ctl-list li {
+    display: inline;
+    padding-right: 0;
+    margin-bottom: 0;
+    padding-left: 0;
+    margin-left: 0;
+}
+
+/* Add left padding to all buttons except the first */
+.ctl-list li:nth-of-type(1n+2) {
+    padding-left: 10px;
+
+}
+
+.ctl-list a {
+    color: darkblue;
+    text-decoration: none;
+    margin: 0;
+    border: 0;
+}
+
+.ctl-list a:hover {
+    color: DarkRed;
+    text-decoration: none;
+}
+
+.vert-split {
+    border-right: 1px solid #a0b0ff;
+    width: auto;
+    margin: 6px 10px;
+}
+
+
+a[disabled] { color: gray; }
+
+a.buttonPushed { color: green; }
+
+
+.audio-player-progress {
+    /*display: inline;*/
+    width: 100px;
+    height: 12px;
+    background-color: #a0a7af;
+    margin-top: 10px;
+}
+
+.audio-player-progress.loading {
+}
+
+.audio-player-progress-bar {
+    /*display: inline;*/
+    height: 100%;
+    width: 0;
+    max-width: 100%;
+    background-color: #808e97;
+    border-right: 1px solid red;
 }
