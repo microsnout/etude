@@ -5,7 +5,10 @@
             [hiccup.form :refer :all]
             [hiccup.element :refer :all]
             [crim.models.db :as db]
-            [noir.session :as session]))
+            [noir.session :as session]
+            [clojure.string :as st]
+            [clojure.java.io :as io]
+            [clojure.data.json :as json]))
 
 
 (defn control []
@@ -39,15 +42,51 @@
    )
 )
 
-(defn ctl-get-text []
-  (str
-  (slurp "resources/public/data/crim/text/01_05.txt")
-  " <input type=\"text\" size=12> "
-  (slurp "resources/public/data/crim/text/01_07.txt")))
+
+;; Dataset Access funtions
+
+(def test-state
+  {
+    :playIndex   0
+    :audioPath   "data/crim/audio/"
+    :textPath    "resources/public/data/crim/text/"
+    :audioExt    ".m4a"
+    :textExt     ".txt"
+    :fileList    ["01_01" "01_02"]
+    })
+
+(defn scan-dataset [name]
+  (let [path (str "resources/public/data/"  name  "/text")
+        list (.list (io/file path))
+        names (map (fn [s] (st/replace-first s ".txt" "")) list)]
+
+    {
+      :playIndex 0
+      :audioPath (str "data/" name "/audio/")
+      :textPath  (str "resources/public/data/" name "/text/")
+      :audioExt  ".m4a"
+      :textExt   ".txt"
+      :fileList  names
+    }
+  )
+)
+
+(defonce data-set (future (scan-dataset "crim")))
+
+
+(defn ctl-get-text [req]
+  (slurp (:url req))
+)
+
+
+
+(defn ctl-get-user-state []
+  (json/write-str data-set))
 
 
 (defroutes control-routes
-  (GET "/ctl-get-text" [] (ctl-get-text))
+  (GET "/ctl-get-text" request (ctl-get-text (:params request)))
+  (GET "/ctl-get-user-state" [] (ctl-get-user-state))
   (GET "/control" [] (control))
   (GET "/userlist" [] (userlist))
 )

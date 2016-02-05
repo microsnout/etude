@@ -1,5 +1,7 @@
 
-// ********** AudioPlayer Class ***********
+// ***************************************************************************************
+// ************* AudioPlayer Class 
+// ***************************************************************************************
 
 this.AudioPlayer = (function() {
 
@@ -122,19 +124,26 @@ AudioPlayer.prototype.seekTo = function(time) {
 
 
 AudioPlayer.prototype.handleEvent = function(event) {
-  var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  if (event.type === "timeupdate") {
+    this._timeUpdate(event);
+  }
+  else {
+    this.updateState(event);
 
-  var _ref;
-  if (_ref = event.type, __indexOf.call(this.audioPlayerEvents, _ref) >= 0) {
-    return this.updateState(event);
-  } else if (event.type === "timeupdate") {
-    return this._timeUpdate(event);
+    if ( event.type === "ended" && this.ui != null ) {
+      this.ui.AudioPlayerTrackEnded(); 
+    } 
   }
 };
 
 AudioPlayer.prototype._bindEvents = function() {
   var eventName, _i, _len, _ref;
-  this.audioPlayerEvents || (this.audioPlayerEvents = ["abort", "error", "play", "playing", "seeked", "pause", "ended", "canplay", "loadstart", "loadeddata", "canplaythrough", "seeking", "stalled", "waiting", "progress"]);
+
+  this.audioPlayerEvents || (this.audioPlayerEvents = 
+      [ "abort", "error", "play", "playing", "seeked", "pause", "ended", 
+        "canplay", "loadstart", "loadeddata", "canplaythrough", "seeking", 
+        "stalled", "waiting", "progress"]);
+
   _ref = this.audioPlayerEvents;
   for (_i = 0, _len = _ref.length; _i < _len; _i++) {
     eventName = _ref[_i];
@@ -166,28 +175,33 @@ AudioPlayer.prototype.destroy = function() {
 };
 
 
-// ************* AudioPlayerUI Class ********
+// ***************************************************************************************
+// ************* AudioPlayerUI Class 
+// ***************************************************************************************
 
 this.AudioPlayerUI = (function() {
 
     function AudioPlayerUI(options) {
+      this.tracks = null;
       this.setOptions( options == null ? {} : options );
       this.audioPlayer = new AudioPlayer( {ui: this} );
       this.audioEl = document.createElement("audio");
+      this.audioEl.autoplay = "true";
       this.audioPlayer.setEl(this.audioEl);
       this.setEl(options.elParent);
-      this.goToTrack(0);
-    }
+      
+      if ( this.trackCount() > 0 )
+        this.goToTrack(0);
+    };
 
     AudioPlayerUI.prototype.setOptions = function(options) {
-      var key, value, _results;
-      _results = [];
+      var key, value;
       for (key in options) {
         value = options[key];
-        _results.push(this[key] = value);
+        this[key] = value;
       }
-      return _results;
     };
+
 
     AudioPlayerUI.prototype.setEl = function(el) {
       this._unbindEvents();
@@ -210,6 +224,38 @@ this.AudioPlayerUI = (function() {
 })();
 
 
+AudioPlayerUI.prototype.trackCount = function () {
+  return (this.tracks == null) ? 0 : this.tracks.fileList.length;
+}
+
+
+AudioPlayerUI.prototype.setTracks = function ( trks ) {
+  console.log(trks);
+
+  this.tracks = trks;
+
+  if ( this.trackCount() > 0 )
+    this.goToTrack(0);
+ }
+
+
+AudioPlayerUI.prototype.getAudioPath = function ( index ) {
+  var tks = this.tracks;
+
+  return tks.audioPath + tks.fileList[index] + tks.audioExt;
+} 
+
+
+AudioPlayerUI.prototype.getTextPath = function ( index ) {
+  var tks = this.tracks;
+
+  var _str = tks.textPath + tks.fileList[index] + tks.textExt;
+
+  console.log( "getTextPath: [" + index + "] " + _str );
+  return _str
+} 
+
+
 AudioPlayerUI.prototype.togglePlayPause = function() {
   if (this.audioPlayer.isPlaying()) {
     this.audioPlayer.pause();
@@ -230,23 +276,29 @@ AudioPlayerUI.prototype.goToTrack = function(index) {
     width: 0
   });
 
-  this.audioEl.src = this.tracks[this.currentTrack].url;
+  this.audioEl.src = this.getAudioPath(index);
+
   this.audioPlayer.load();
+
   if (wasPlaying) {
-    return this.audioPlayer.play();
+    this.audioPlayer.play();
   }
+
+  $.get("/ctl-get-text", { url: this.getTextPath(index) }, function(data) {
+     $('#textbox').html(data);
+   });
 };
 
 
 AudioPlayerUI.prototype.nextTrack = function() {
-  this.goToTrack( this.currentTrack === this.tracks.length - 1 ? 
-    0 : this.currentTrack + 1);
+  this.goToTrack( this.currentTrack == (this.trackCount() - 1) ? 
+    0 : (this.currentTrack + 1));
 };
 
 
 AudioPlayerUI.prototype.prevTrack = function() {
-  this.goToTrack( this.currentTrack === 0 ?
-    this.tracks.length - 1  : this.currentTrack - 1 );
+  this.goToTrack( this.currentTrack == 0 ?
+    (this.trackCount() - 1)  : (this.currentTrack - 1) );
 };
 
 
@@ -256,7 +308,7 @@ AudioPlayerUI.prototype.seek = function(e) {
     percent = offset / this.$progressContainer.width();
     duration = this.audioPlayer.duration();
     seekTo = duration * percent;
-    return this.audioPlayer.seekTo(seekTo);
+    this.audioPlayer.seekTo(seekTo);
   }
 };
 
@@ -269,6 +321,12 @@ AudioPlayerUI.prototype.AudioPlayerUpdateState = function() {
   } else {
     this.$playbutton.html("1");
   }
+};
+
+
+AudioPlayerUI.prototype.AudioPlayerTrackEnded = function() {
+  this.nextTrack();
+  this.audioPlayer.play();
 };
 
 
@@ -307,7 +365,7 @@ AudioPlayerUI.prototype._bindEvents = function() {
   this.$stopButton.on("click", $.proxy(this, "stopPlayer"));
   this.$loopButton.on("click", $.proxy(this, "toggleLoopMode"));
   this.$replayButton.on("click", $.proxy(this, "replayTrack"));
-  return this.$progressContainer.on("mouseup", $.proxy(this, "seek"));
+  this.$progressContainer.on("mouseup", $.proxy(this, "seek"));
 };
 
 
@@ -326,88 +384,25 @@ AudioPlayerUI.prototype._unbindEvents = function() {
 };
 
 
-//***********
+// ***************************************************************************************
+// ************* Document Ready
+// ***************************************************************************************
 
 $(document).ready(function(){
 
     console.log("Doc ready");
 
-    $.get("/ctl-get-text", 'test=1', function(data) {
-      $('#textbox').html(data);
+    // Create AudioPlayer 
+    audioPlayer = new AudioPlayerUI(
+      {
+        elParent: 
+          document.getElementById("controls") 
+      } 
+    );
+
+    $.getJSON("/ctl-get-user-state", function(state) {
+      audioPlayer.setTracks(state);
     });
 
-    audioPlayer = new AudioPlayerUI({
-        elParent: document.getElementById("controls"),
-        tracks: [
-          {
-            title: "AA",
-            url: "data/crim/audio/01_01.m4a"
-          },
-          {
-            title: "BB",
-            url: "data/crim/audio/01_02.m4a"
-          }
-        ]
-    } );
-
-//    play = $('#play-pause');
-//    replay = $('#replay');
-
-//    ctl_audio = new Audio();
-
-//    addEventHandlers();
-
-//    ctl_audio.src = "data/crim/audio/01_01.m4a";
-//    ctl_audio.play();
 
 });
-
-
-
-
-function addEventHandlers(){
-    $("a#stop").click(stopAudio);
-    $("a#back").click(backAudio);
-    play.click(playAudio);
-    replay.click(replayAudio);
-    $("a#next").click(nextAudio);
-    $("a#loop").click(loopAudio);
-}
-
-
-function stopAudio() {
-}
-
-function backAudio() {
-}
-
-function playAudio() {
-  ctl_audio.play();
-
-//  $("a#play").attr("disabled", "disabled");
-//  $("a#pause").removeAttr("disabled");
-
-  $("a#play").html("");
-  $("a#pause").html("");
-}
-
-function pauseAudio() {
-  ctl_audio.pause();
-
-//  $("a#play").removeAttr("disabled");
-//  $("a#pause").attr("disabled", "disabled");
-
-  $("a#play").html("");
-  $("a#pause").html("1");
-}
-
-function replayAudio() {
-  ctl_audio.currentTime = 0;
-}
-
-function nextAudio() {
-}
-
-function loopAudio() {
-  ctl_audio.loop = !ctl_audio.loop;
-}

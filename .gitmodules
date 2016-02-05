@@ -1,3 +1,6 @@
 [submodule "resources/public/data/crim"]
 	path = resources/public/data/crim
 	url = https://github.com/microsnout/crim.git
+[submodule "resources/public/data/offqc"]
+	path = resources/public/data/offqc
+	url = https://github.com/microsnout/offqc.git
