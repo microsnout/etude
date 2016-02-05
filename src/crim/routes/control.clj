@@ -69,12 +69,14 @@
       :textPath  (str "resources/public/data/" name "/text/")
       :audioExt  ".m4a"
       :textExt   ".txt"
-      :fileList  names
+      :fileList  (shuffle names)
     }
   )
 )
 
+
 (def data-set (scan-dataset "crim"))
+;;(defonce data-set (future (scan-dataset "crim")))
 
 
 (defn ctl-get-text [req]
