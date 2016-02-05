@@ -179,12 +179,23 @@ cite.guests { font-size: 12px }
 }
 
 
+/* Info Line - Just above textbox */
+#info-line {
+    color: #009BE3;
+    /*font-family: Fanwood Text;*/
+
+    margin: 0px 30px 0px;
+    border: 0;
+    padding: 0;
+}
+
+
 /* Main text display area */
 #textbox {
     border: 1px solid #009BE3;
     height: 300px;
-    margin: 10px;
-    padding: 20px;
+    margin: 0px 10px 10px;
+    padding: 10px 20px 10px; 
     line-height: 1.6;
 
     font-family: "Trebuchet MS";

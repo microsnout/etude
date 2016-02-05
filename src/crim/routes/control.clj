@@ -13,21 +13,24 @@
 
 (defn control []
   (layout/common
-     [:br]
-     [:div#textbox]
-     [:div#controls
-        
-          [:ul.ctl-list
-            (map
-              (fn [id chr]
-                  [:li [:a {:role "button", :href "#", :id id} chr]])
-              ["stop" "back" "play-pause" "replay" "next" "loop"]
-              (map str (seq "37198(")))] 
+      [:br]
+      [:div#info-line]
+      [:div#textbox]
+
+      [:div#controls        
+        [:ul.ctl-list
+          (map
+            (fn [id chr]
+                [:li [:a {:role "button", :href "#", :id id} chr]])
+            ["stop" "back" "play-pause" "replay" "next" "loop"]
+            (map str (seq "37198(")))] 
 
         [:span.vert-split]
              
         [:div.audio-player-progress
           [:div.audio-player-progress-bar]]
+
+        [:span.vert-split]
       ]
   )
 )
@@ -71,7 +74,7 @@
   )
 )
 
-(defonce data-set (future (scan-dataset "crim")))
+(def data-set (scan-dataset "crim"))
 
 
 (defn ctl-get-text [req]

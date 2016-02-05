@@ -42,6 +42,17 @@ this.AudioPlayer = (function() {
 })();
 
 
+AudioPlayer.prototype.setAudioSrc = function( url )
+{
+  var _playing = this.isPlaying();
+
+  this.el.src = url;
+  this.load();
+
+  if ( _playing ) this.play();
+}
+
+
 AudioPlayer.prototype.updateState = function(e) {
   var state;
 
@@ -185,9 +196,9 @@ this.AudioPlayerUI = (function() {
       this.tracks = null;
       this.setOptions( options == null ? {} : options );
       this.audioPlayer = new AudioPlayer( {ui: this} );
-      this.audioEl = document.createElement("audio");
-      this.audioEl.autoplay = "true";
-      this.audioPlayer.setEl(this.audioEl);
+      var _el = document.createElement("audio");
+      _el.autoplay = "true";
+      this.audioPlayer.setEl(_el);
       this.setEl(options.elParent);
       
       if ( this.trackCount() > 0 )
@@ -207,7 +218,7 @@ this.AudioPlayerUI = (function() {
       this._unbindEvents();
       this.el = el;
       this.$el = $(this.el);
-      this.$el.append(this.audioEl);
+      this.$el.append(el);
       this.$progressContainer = this.$el.find(".audio-player-progress");
       this.$progressBar = this.$el.find(".audio-player-progress-bar");
       this.$playbutton = this.$el.find("#play-pause");
@@ -268,25 +279,19 @@ AudioPlayerUI.prototype.togglePlayPause = function() {
 AudioPlayerUI.prototype.goToTrack = function(index) {
   console.log("goToTrack: " + index)
 
-  var wasPlaying = this.audioPlayer.isPlaying();
-
   this.currentTrack = index;
 
-  this.$progressBar.css({
-    width: 0
-  });
+  this.$progressBar.css( {width: 0} );
 
-  this.audioEl.src = this.getAudioPath(index);
+  var _path = this.getAudioPath(index); 
 
-  this.audioPlayer.load();
-
-  if (wasPlaying) {
-    this.audioPlayer.play();
-  }
-
+  this.audioPlayer.setAudioSrc( _path );
+  
   $.get("/ctl-get-text", { url: this.getTextPath(index) }, function(data) {
      $('#textbox').html(data);
    });
+
+  $('#info-line').html( _path );
 };
 
 
