@@ -64,6 +64,7 @@
         (if (= pass (:pass user))
           (do
             (session/put! :user id)
+            (session/put! :state (:state user))
             (redirect "/control"))
           (do
             (rule false [:pass "Invalid password"])
@@ -82,7 +83,7 @@
   (if (errors? :userid :pass1 :pass2)
       (registration-page)
       (try
-        (db/create-user {:userid userid :pass pass1})
+        (db/create-user userid pass1)
         (session/put! :user userid)
         (redirect "/control")
         (catch Exception ex

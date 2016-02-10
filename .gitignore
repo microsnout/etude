@@ -11,6 +11,8 @@ pom.xml
 .lein-failures
 .lein-plugins
 .lein-env
+.lein-repl-history
+.nrepl-port
 *.sq3
 *.m4a
 *.txt

@@ -291,7 +291,7 @@ AudioPlayerUI.prototype.goToTrack = function(index) {
      $('#textbox').html(data);
    });
 
-  $('#info-line').html( _path );
+  $('#info-line').html( "<i>File: </i>" + _path );
 };
 
 

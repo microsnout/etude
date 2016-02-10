@@ -32,6 +32,10 @@ nav#lognav {
     color: #cfcfcf;
 }
 
+/* Small space left of login/logout link on status bar */
+nav#lognav a { margin-left: 10px; }
+
+
 /* Banner box with blue gradient */
 .header-box {
     width: 100%;

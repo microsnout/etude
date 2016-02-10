@@ -7,7 +7,7 @@
 (defn get-login-status []
   (if-let [id (session/get :user)]
     (list "User: " [:span.username id] " " (link-to {:class "footText"} "/logout" "Logout"))
-    (list "User: ----  " (link-to {:class "footText"} "/login" "Login"))
+    (list "User: -----" (link-to {:class "footText"} "/login" "Login"))
   )
 )
 
@@ -43,13 +43,23 @@
 
 
 (defn common [& main]
-  (html5
-    [:head
-       [:title "crim 0.1"]
-       (include-css "/css/fonts/stylesheet.css")
-       (include-css "/css/screen.css")
-       (include-js "//ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js")
-       (include-js "/js/site.js")]
-    [:body (get-header) [:main main] (get-footer)]
+  (if-let [[keyw filespec & tail] (and (= (first main) :include-js) main)]
+    (html5
+      [:head
+         [:title "crim 0.1"]
+         (include-css "/css/fonts/stylesheet.css")
+         (include-css "/css/screen.css")
+         (include-js "//ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js")
+         (include-js filespec)]
+      [:body (get-header) [:main tail] (get-footer)]
+    )
+    (html5
+      [:head
+         [:title "crim 0.1"]
+         (include-css "/css/fonts/stylesheet.css")
+         (include-css "/css/screen.css")
+         (include-js "//ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js")]
+      [:body (get-header) [:main main] (get-footer)]
+    )
   )
 )

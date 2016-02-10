@@ -12,7 +12,8 @@
 
 
 (defn control []
-  (layout/common
+  (layout/common 
+      :include-js "js/site.js"
       [:br]
       [:div#info-line]
       [:div#textbox]
@@ -50,12 +51,13 @@
 
 (def test-state
   {
+    :playMode    1
     :playIndex   0
     :audioPath   "data/crim/audio/"
     :textPath    "resources/public/data/crim/text/"
     :audioExt    ".m4a"
     :textExt     ".txt"
-    :fileList    ["01_01" "01_02"]
+    :fileList    ["01_01" "01_02" "10_01" "01_10"]
     })
 
 (defn scan-dataset [name]
@@ -64,12 +66,13 @@
         names (map (fn [s] (st/replace-first s ".txt" "")) list)]
 
     {
-      :playIndex 0
-      :audioPath (str "data/" name "/audio/")
-      :textPath  (str "resources/public/data/" name "/text/")
-      :audioExt  ".m4a"
-      :textExt   ".txt"
-      :fileList  (shuffle names)
+      :playMode   1
+      :playIndex  0
+      :audioPath  (str "data/" name "/audio/")
+      :textPath   (str "resources/public/data/" name "/text/")
+      :audioExt   ".m4a"
+      :textExt    ".txt"
+      :fileList   (shuffle names)
     }
   )
 )
@@ -86,7 +89,15 @@
 
 
 (defn ctl-get-user-state []
-  (json/write-str data-set))
+  (let 
+    [id (session/get :user)
+     st (session/get :state)]
+    (if (:playMode st)
+      (json/write-str st)
+      (json/write-str test-state)
+    )
+  )
+)
 
 
 (defroutes control-routes

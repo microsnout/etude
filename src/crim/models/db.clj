@@ -1,10 +1,15 @@
 (ns crim.models.db
-  (:require [clojure.java.jdbc :as sql])
+  (:require 
+      [clojure.java.jdbc :as sql]
+      [clojure.data.json :as json])
   (:import java.sql.DriverManager))
 
-(def db {:classname  "org.sqlite.JDBC",
+
+(def db {:classname     "org.sqlite.JDBC",
          :subprotocol   "sqlite",
-         :subname       "db.sq3"})
+         :subname       "db.sq3"
+})
+
 
 (defn create-tables []
   (sql/with-connection
@@ -21,8 +26,10 @@
     (sql/create-table
       :usertable
       [:userid "TEXT PRIMARY KEY"]
-      [:pass "TEXT"])
-  ))
+      [:pass "TEXT"]
+      [:state "TEXT"])
+  )
+)
 
 (defn read-guests []
   (sql/with-connection
@@ -44,7 +51,13 @@
     db
     (sql/with-query-results res
       ["select * from usertable where userid = ?" userid]
-      (first res))))
+      (if-let [st (first res)]
+        (assoc st :state (json/read-str (:state st) :key_fn keyword))
+        {}
+      )
+    )
+  )
+)
 
 
 (defn save-message [name message]
@@ -56,8 +69,22 @@
       [name message (new java.util.Date)])))
 
 
-(defn create-user [user]
+(defn create-user [userid password]
   (sql/with-connection
     db
-    (sql/insert-record :usertable user)))
+    (sql/insert-values 
+      :usertable 
+      [:userid :pass :state]
+      [userid password (json/write-str {})] )))
 
+
+(defn update-user-state [userid new-state]
+  (sql/with-connection
+    db
+    (sql/update-values
+      :usertable
+      ["userid=?" userid]
+      {:state (json/write-str new-state)}
+    )
+  )
+)
