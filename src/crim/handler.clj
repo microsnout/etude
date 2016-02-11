@@ -26,7 +26,7 @@
   (route/not-found "Not Found"))
 
 (def app
-  (-> (routes auth-routes home-routes control-routes app-routes)
+  (-> (routes home-routes control-routes auth-routes app-routes)
       (handler/site)
       (wrap-base-url)
       (session/wrap-noir-session {:store (memory-store)})

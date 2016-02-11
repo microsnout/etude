@@ -105,4 +105,7 @@
   (GET "/ctl-get-user-state" [] (ctl-get-user-state))
   (GET "/control" [] (control))
   (GET "/userlist" [] (userlist))
+  (GET "/logout" []
+       
+       nil)
 )

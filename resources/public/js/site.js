@@ -6,36 +6,40 @@
 this.AudioPlayer = (function() {
 
     AudioPlayer.States = {
-      Ready: 0,
-      Playing: 1,
-      Loading: 2,
-      Error: 3
+      Ready:    0,
+      Playing:  1,
+      Loading:  2,
+      Error:    3
     };
 
     function AudioPlayer(options) {
+      // Create audio element if none provided
+      if ( options.el === undefined ) {
+        this.el = document.createElement("audio");
+        this.el.autoplay = "true";
+      }
+
+      // Set all options as part of this
       this.setOptions(options);
+
+      this._bindEvents();
     }
 
+
     AudioPlayer.prototype.setOptions = function(options) {
-      var key, value;
-      if (options == null) {
-        options = {};
-      }
-      for (key in options) {
-        value = options[key];
-        this[key] = value;
-      }
-      if (options.el) {
-        return this.setEl(options.el);
+      options = options || {};
+
+      for ( var key in options ) {
+        this[key] = options[key];
       }
     };
 
     AudioPlayer.prototype.setEl = function(el) {
-      if (this.el) {
+      if ( this.el ) {
         this._unbindEvents();
       }
       this.el = el;
-      return this._bindEvents();
+      this._bindEvents();
     };
 
   return AudioPlayer;
@@ -148,30 +152,28 @@ AudioPlayer.prototype.handleEvent = function(event) {
 };
 
 AudioPlayer.prototype._bindEvents = function() {
-  var eventName, _i, _len, _ref;
-
-  this.audioPlayerEvents || (this.audioPlayerEvents = 
+  var _ref = this.audioPlayerEvents = 
       [ "abort", "error", "play", "playing", "seeked", "pause", "ended", 
         "canplay", "loadstart", "loadeddata", "canplaythrough", "seeking", 
-        "stalled", "waiting", "progress"]);
+        "stalled", "waiting", "progress"];
 
-  _ref = this.audioPlayerEvents;
-  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-    eventName = _ref[_i];
-    this.el.addEventListener(eventName, this);
+  for ( var i = 0 ; i < _ref.length ; i++ ) {
+    this.el.addEventListener( _ref[i], this );
   }
-  return this.el.addEventListener("timeupdate", this);
+
+  this.el.addEventListener("timeupdate", this);
 };
+
 
 AudioPlayer.prototype._unbindEvents = function() {
-  var eventName, _i, _len, _ref;
-  _ref = this.audioPlayerEvents;
-  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-    eventName = _ref[_i];
-    this.el.removeEventListener(eventName, this);
+  var _ref = this.audioPlayerEvents;
+
+  for ( i = 0 ; i < _ref.length ; i++ ) {
+    this.el.removeEventListener(_ref[i], this);
   }
-  return this.el.removeEventListener("timeupdate", this);
+  this.el.removeEventListener("timeupdate", this);
 };
+
 
 AudioPlayer.prototype._timeUpdate = function(e) {
   var _ref;
@@ -194,39 +196,33 @@ this.AudioPlayerUI = (function() {
 
     function AudioPlayerUI(options) {
       this.tracks = null;
-      this.setOptions( options == null ? {} : options );
+
+      // Set options
+      for ( var key in options ) {
+        this[key] = options[key];
+      }
+
       this.audioPlayer = new AudioPlayer( {ui: this} );
-      var _el = document.createElement("audio");
-      _el.autoplay = "true";
-      this.audioPlayer.setEl(_el);
-      this.setEl(options.elParent);
+
+      this.setUI( options.ui );
       
       if ( this.trackCount() > 0 )
-        this.goToTrack(0);
-    };
-
-    AudioPlayerUI.prototype.setOptions = function(options) {
-      var key, value;
-      for (key in options) {
-        value = options[key];
-        this[key] = value;
-      }
+        this.goToTrack(trks.playIndex);
     };
 
 
-    AudioPlayerUI.prototype.setEl = function(el) {
+    AudioPlayerUI.prototype.setUI = function(el) {
       this._unbindEvents();
       this.el = el;
-      this.$el = $(this.el);
-      this.$el.append(el);
-      this.$progressContainer = this.$el.find(".audio-player-progress");
-      this.$progressBar = this.$el.find(".audio-player-progress-bar");
-      this.$playbutton = this.$el.find("#play-pause");
-      this.$backButton = this.$el.find("#back");
-      this.$nextButton = this.$el.find("#next");
-      this.$stopButton = this.$el.find("#stop");
-      this.$loopButton = this.$el.find("#loop");
-      this.$replayButton = this.$el.find("#replay");
+      var $el = $(this.el);
+      this.$progressContainer = $el.find(".audio-player-progress");
+      this.$progressBar = $el.find(".audio-player-progress-bar");
+      this.$playbutton = $el.find("#play-pause");
+      this.$backButton = $el.find("#back");
+      this.$nextButton = $el.find("#next");
+      this.$stopButton = $el.find("#stop");
+      this.$loopButton = $el.find("#loop");
+      this.$replayButton = $el.find("#replay");
       this._bindEvents();
     };
 
@@ -236,17 +232,15 @@ this.AudioPlayerUI = (function() {
 
 
 AudioPlayerUI.prototype.trackCount = function () {
-  return (this.tracks == null) ? 0 : this.tracks.fileList.length;
+  return this.tracks ? this.tracks.fileList.length : 0;
 }
 
 
 AudioPlayerUI.prototype.setTracks = function ( trks ) {
-  console.log(trks);
-
   this.tracks = trks;
 
   if ( this.trackCount() > 0 )
-    this.goToTrack(0);
+    this.goToTrack(trks.playIndex);
  }
 
 
@@ -279,7 +273,11 @@ AudioPlayerUI.prototype.togglePlayPause = function() {
 AudioPlayerUI.prototype.goToTrack = function(index) {
   console.log("goToTrack: " + index)
 
-  this.currentTrack = index;
+  var _size = this.trackCount();
+
+  console.assert( (index >= 0) && (index < _size) , index );
+
+  this.tracks.playIndex = index;
 
   this.$progressBar.css( {width: 0} );
 
@@ -296,14 +294,14 @@ AudioPlayerUI.prototype.goToTrack = function(index) {
 
 
 AudioPlayerUI.prototype.nextTrack = function() {
-  this.goToTrack( this.currentTrack == (this.trackCount() - 1) ? 
-    0 : (this.currentTrack + 1));
+  this.goToTrack( this.tracks.playIndex == (this.trackCount() - 1) ? 
+    0 : (this.tracks.playIndex + 1));
 };
 
 
 AudioPlayerUI.prototype.prevTrack = function() {
-  this.goToTrack( this.currentTrack == 0 ?
-    (this.trackCount() - 1)  : (this.currentTrack - 1) );
+  this.goToTrack( this.tracks.playIndex == 0 ?
+    (this.trackCount() - 1)  : (this.tracks.playIndex - 1) );
 };
 
 
@@ -400,7 +398,7 @@ $(document).ready(function(){
     // Create AudioPlayer 
     audioPlayer = new AudioPlayerUI(
       {
-        elParent: 
+        ui: 
           document.getElementById("controls") 
       } 
     );
