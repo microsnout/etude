@@ -129,7 +129,6 @@ AudioPlayer.prototype.pause = function() {
 
 AudioPlayer.prototype.load = function() {
   console.log("AudioPlayer.load");
-  console.log(this);
   return this.el.load();
 };
 
@@ -144,12 +143,9 @@ AudioPlayer.prototype.handleEvent = function(event) {
   }
   else {
     this.updateState(event);
-
-    if ( event.type === "ended" && this.ui != null ) {
-      this.ui.AudioPlayerTrackEnded(); 
-    } 
   }
 };
+
 
 AudioPlayer.prototype._bindEvents = function() {
   var _ref = this.audioPlayerEvents = 
@@ -205,14 +201,11 @@ this.AudioPlayerUI = (function() {
       this.audioPlayer = new AudioPlayer( {ui: this} );
 
       this.setUI( options.ui );
-      
-      if ( this.trackCount() > 0 )
-        this.goToTrack(trks.playIndex);
     };
 
 
     AudioPlayerUI.prototype.setUI = function(el) {
-      this._unbindEvents();
+      //this._unbindEvents();
       this.el = el;
       var $el = $(this.el);
       this.$progressContainer = $el.find(".audio-player-progress");
@@ -231,77 +224,12 @@ this.AudioPlayerUI = (function() {
 })();
 
 
-AudioPlayerUI.prototype.trackCount = function () {
-  return this.tracks ? this.tracks.fileList.length : 0;
-}
-
-
-AudioPlayerUI.prototype.setTracks = function ( trks ) {
-  this.tracks = trks;
-
-  if ( this.trackCount() > 0 )
-    this.goToTrack(trks.playIndex);
- }
-
-
-AudioPlayerUI.prototype.getAudioPath = function ( index ) {
-  var tks = this.tracks;
-
-  return tks.audioPath + tks.fileList[index] + tks.audioExt;
-} 
-
-
-AudioPlayerUI.prototype.getTextPath = function ( index ) {
-  var tks = this.tracks;
-
-  var _str = tks.textPath + tks.fileList[index] + tks.textExt;
-
-  console.log( "getTextPath: [" + index + "] " + _str );
-  return _str
-} 
-
-
 AudioPlayerUI.prototype.togglePlayPause = function() {
   if (this.audioPlayer.isPlaying()) {
     this.audioPlayer.pause();
   } else {
     this.audioPlayer.play();
   }
-};
-
-
-AudioPlayerUI.prototype.goToTrack = function(index) {
-  console.log("goToTrack: " + index)
-
-  var _size = this.trackCount();
-
-  console.assert( (index >= 0) && (index < _size) , index );
-
-  this.tracks.playIndex = index;
-
-  this.$progressBar.css( {width: 0} );
-
-  var _path = this.getAudioPath(index); 
-
-  this.audioPlayer.setAudioSrc( _path );
-  
-  $.get("/ctl-get-text", { url: this.getTextPath(index) }, function(data) {
-     $('#textbox').html(data);
-   });
-
-  $('#info-line').html( "<i>File: </i>" + _path );
-};
-
-
-AudioPlayerUI.prototype.nextTrack = function() {
-  this.goToTrack( this.tracks.playIndex == (this.trackCount() - 1) ? 
-    0 : (this.tracks.playIndex + 1));
-};
-
-
-AudioPlayerUI.prototype.prevTrack = function() {
-  this.goToTrack( this.tracks.playIndex == 0 ?
-    (this.trackCount() - 1)  : (this.tracks.playIndex - 1) );
 };
 
 
@@ -324,12 +252,6 @@ AudioPlayerUI.prototype.AudioPlayerUpdateState = function() {
   } else {
     this.$playbutton.html("1");
   }
-};
-
-
-AudioPlayerUI.prototype.AudioPlayerTrackEnded = function() {
-  this.nextTrack();
-  this.audioPlayer.play();
 };
 
 
@@ -361,28 +283,78 @@ AudioPlayerUI.prototype.replayTrack = function() {
 };
 
 
+AudioPlayerUI.prototype.loadText = function( url ) {
+  console.log("loadText:" + url);
+
+  $.get("/ctl-get-text", { url: url}, function(data) {
+     $('#textbox').html(data);
+   });
+
+  $('#info-line').html( "<i>File: </i>" + url );
+}
+
+
+AudioPlayerUI.prototype.loadAudio = function( url ) {
+  console.log("loadAudio:" + url);
+
+  this.$progressBar.css( {width: 0} );
+  this.audioPlayer.setAudioSrc( url );
+}
+
+
+AudioPlayerUI.prototype.handleServerPost = function( event ) {
+  console.log("handleServerPost: " + event.target.id);
+
+  // Save context of this obj for the callback func
+  var _this = this;
+
+  $.post("/ctl-post-user-event", { id: event.target.id }, function(data) {
+//      console.log("Post ret:");
+//      console.log(data);
+
+      for ( i=0 ; i < data.length ; i++ ) {
+        var args = data[i];
+        var fn = args.shift();
+        window["AudioPlayerUI"]["prototype"][fn].apply( _this, args );
+      }
+  }, 'json');
+};
+
+
+AudioPlayerUI.prototype.handleEvent = function( event ) {
+  console.log("AudioPlayerUI.handleEvent:" + event.type);
+  if ( event.type == "ended" ) {
+    this.handleServerPost( {target: {id: "ended"}} );
+  }
+}
+
+
 AudioPlayerUI.prototype._bindEvents = function() {
   this.$playbutton.on("click", $.proxy(this, "togglePlayPause"));
-  this.$backButton.on("click", $.proxy(this, "prevTrack"));
-  this.$nextButton.on("click", $.proxy(this, "nextTrack"));
   this.$stopButton.on("click", $.proxy(this, "stopPlayer"));
   this.$loopButton.on("click", $.proxy(this, "toggleLoopMode"));
   this.$replayButton.on("click", $.proxy(this, "replayTrack"));
   this.$progressContainer.on("mouseup", $.proxy(this, "seek"));
+
+  // Capture click events for all controls with class "server"
+  $(this.el).find(".server").on("click", $.proxy(this.handleServerPost, this))  
+
+  // Capture track ended event from audio player
+  this.audioPlayer.el.addEventListener("ended", this);
 };
 
 
 AudioPlayerUI.prototype._unbindEvents = function() {
-  var _ref, _ref1, _ref2, _ref3;
-  if ((_ref = this.$button) != null) {
-    _ref.off("click", this.togglePlayPause);
-  }
-  if ((_ref1 = this.$backButton) != null) {
-    _ref1.off("click", this.previousSong);
-  }
-  if ((_ref2 = this.$nextButton) != null) {
-    _ref2.off("click", this.nextSong);
-  }
+  this.$playbutton.off("click");
+  this.$stopButton.off("click");
+  this.$loopButton.off("click");
+  this.$replayButton.off("click");
+  this.$progressContainer.off("mouseup");
+  
+  $(this.el).find(".server").off("click", this.handleServerPost); 
+
+  this.audioPlayer.el.removeEventListener("ended", this);
+
   return (_ref3 = this.$progressContainer) != null ? _ref3.off("mouseup", this.seek) : void 0;
 };
 
@@ -396,16 +368,9 @@ $(document).ready(function(){
     console.log("Doc ready");
 
     // Create AudioPlayer 
-    audioPlayer = new AudioPlayerUI(
-      {
-        ui: 
-          document.getElementById("controls") 
-      } 
-    );
+    var audioPlayer = new AudioPlayerUI( { ui: document.getElementById("controls") } );
 
-    $.getJSON("/ctl-get-user-state", function(state) {
-      audioPlayer.setTracks(state);
-    });
-
+    // Start up 
+    audioPlayer.handleServerPost( { target: { id: "startup" }} );
 
 });

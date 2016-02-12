@@ -52,7 +52,7 @@
     (sql/with-query-results res
       ["select * from usertable where userid = ?" userid]
       (if-let [st (first res)]
-        (assoc st :state (json/read-str (:state st) :key_fn keyword))
+        (assoc st :state (json/read-str (:state st) :key-fn keyword))
         {}
       )
     )

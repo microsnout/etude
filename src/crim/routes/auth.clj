@@ -62,9 +62,11 @@
       (let
         [user (db/get-user id)]
         (if (= pass (:pass user))
-          (do
+          (let
+            [st (:state user)
+             ns (if st st {})]
             (session/put! :user id)
-            (session/put! :state (:state user))
+            (session/put! :state ns)
             (redirect "/control"))
           (do
             (rule false [:pass "Invalid password"])
@@ -83,12 +85,25 @@
   (if (errors? :userid :pass1 :pass2)
       (registration-page)
       (try
+        ;; Create new user with empty state
         (db/create-user userid pass1)
         (session/put! :user userid)
+        (session/put! :state {})
         (redirect "/control")
         (catch Exception ex
           (rule false [:userid "User Id aleady exists"])
           (registration-page))))
+)
+
+
+(defn handle-logout []
+  (if-let [id (session/get :user)]
+    (do
+      ;; Save current user state in db and clear session
+      (db/update-user-state id (session/get :state))
+      (session/clear!)
+      (redirect "/"))
+  )
 )
 
 
@@ -100,7 +115,5 @@
   (POST "/login" [id pass]
         (handle-login id pass))
   (GET "/logout" []
-       (session/clear!)
-       (redirect "/"))
-
+       (handle-logout))
 )
