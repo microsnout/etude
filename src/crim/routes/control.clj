@@ -15,7 +15,7 @@
       :include-js "js/site.js"
       [:br]
       [:div#info-line]
-      [:div#textbox]
+      [:div#textbox [:div#display.scroll-pane]]
 
       [:div#controls        
         [:ul.ctl-list
@@ -71,7 +71,7 @@
       :playIndex  0
       :audioPath  (str "data/" name "/audio/")
       :textPath   (str "resources/public/data/" name "/text/")
-      :audioExt   ".m4a"
+      :audioExt   ".mp3"
       :textExt    ".txt"
       :fileList   (shuffle names)
     }
@@ -97,7 +97,7 @@
 
 (defn event-startup []
   (if (empty? (session/get :state))
-    (session/put! :state test-state))
+    (session/put! :state data-set))
   (gen-cmd-resp)
 )
 
@@ -127,7 +127,7 @@
 ;; ******
 
 
-(def data-set (scan-dataset "crim"))
+(def data-set (scan-dataset "offqc"))
 ;;(defonce data-set (future (scan-dataset "crim")))
 
 

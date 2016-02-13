@@ -1,0 +1,23 @@
+/* Syle changes for scroll bars */
+
+.jspVerticalBar,
+.jspTrack
+{
+	background: transparent;
+	width: 10px;
+}
+
+.jspDrag
+{
+	background: #8ec6ed;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
+}
+
+.jspDrag:hover
+{
+	background: #8B8B9F;
+}
+
+

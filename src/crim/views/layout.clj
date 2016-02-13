@@ -47,18 +47,26 @@
     (html5
       [:head
          [:title "crim 0.1"]
+         (include-css "/css/jquery.jscrollpane.css")
+         (include-css "/css/jquery.jscrollpane.mytheme.css")
          (include-css "/css/fonts/stylesheet.css")
          (include-css "/css/screen.css")
          (include-js "//ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js")
+         (include-js "/js/jquery.jscrollpane.min.js")
+         (include-js "/js/jquery.mousewheel.js")
          (include-js filespec)]
       [:body (get-header) [:main tail] (get-footer)]
     )
     (html5
       [:head
          [:title "crim 0.1"]
+         (include-css "/css/jquery.jscrollpane.css")
+         (include-css "/css/jquery.jscrollpane.mytheme.css")
          (include-css "/css/fonts/stylesheet.css")
          (include-css "/css/screen.css")
          (include-js "//ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js")]
+         (include-js "/js/jquery.jscrollpane.min.js")
+         (include-js "/js/jquery.mousewheel.js")
       [:body (get-header) [:main main] (get-footer)]
     )
   )

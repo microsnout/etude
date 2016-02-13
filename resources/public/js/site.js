@@ -199,8 +199,12 @@ this.AudioPlayerUI = (function() {
       }
 
       this.audioPlayer = new AudioPlayer( {ui: this} );
-
       this.setUI( options.ui );
+
+      // Initialise jScrollPane
+      var pane = $('.scroll-pane');
+      pane.jScrollPane();
+      this.apiScrollpane = pane.data('jsp');
     };
 
 
@@ -286,8 +290,12 @@ AudioPlayerUI.prototype.replayTrack = function() {
 AudioPlayerUI.prototype.loadText = function( url ) {
   console.log("loadText:" + url);
 
+  // Save context of this obj for the callback func
+  var _this = this;
+
   $.get("/ctl-get-text", { url: url}, function(data) {
-     $('#textbox').html(data);
+      _this.apiScrollpane.getContentPane().html(data);
+      _this.apiScrollpane.reinitialise();
    });
 
   $('#info-line').html( "<i>File: </i>" + url );
@@ -373,4 +381,44 @@ $(document).ready(function(){
     // Start up 
     audioPlayer.handleServerPost( { target: { id: "startup" }} );
 
+    // Re-initialise the jScrollPane when the window is resized
+    $('.scroll-pane').each(
+      function() {
+        var api = $(this).data('jsp');
+        var timeout;
+        $(window).bind( 'resize',
+          function() {
+            if ( !timeout ) {
+              timeout = setTimeout(
+                function() {
+                  api.reinitialise();
+                  timeout = null;
+                }, 
+                50);
+            }
+          }
+        )
+      }
+    )
+
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

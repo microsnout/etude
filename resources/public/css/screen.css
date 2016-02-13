@@ -196,20 +196,26 @@ cite.guests { font-size: 12px }
 
 /* Main text display area */
 #textbox {
+    /*max-width: 800px;*/
     border: 1px solid #009BE3;
-    height: 380px;
+    height: 310px;
     margin: 0px 10px 10px;
     padding: 10px 20px 10px; 
-    line-height: 1.6;
+    border-radius: 10px;
 
+    line-height: 1.6;
     font-family: "Trebuchet MS";
     font-weight: normal;
     font-style: normal;
     font-size: 14px;
     color: black;
-    border-radius: 10px;
 }
 
+.scroll-pane {
+    width: auto;
+    height: 100%;
+    overflow: auto;
+}
 
 #controls {
     background-color: #e0f0ff;
