@@ -108,6 +108,7 @@ AudioPlayer.prototype.duration = function() {
 
 AudioPlayer.prototype.percentComplete = function() {
   var number;
+  console.log( "percentComplete " + this.el.currentTime + " of " + this.el.duration)
   number = ~~((this.el.currentTime / this.el.duration) * 10000);
   return number / 10000;
 };
@@ -138,12 +139,7 @@ AudioPlayer.prototype.seekTo = function(time) {
 
 
 AudioPlayer.prototype.handleEvent = function(event) {
-  if (event.type === "timeupdate") {
-    this._timeUpdate(event);
-  }
-  else {
-    this.updateState(event);
-  }
+  this.updateState(event);
 };
 
 
@@ -156,8 +152,6 @@ AudioPlayer.prototype._bindEvents = function() {
   for ( var i = 0 ; i < _ref.length ; i++ ) {
     this.el.addEventListener( _ref[i], this );
   }
-
-  this.el.addEventListener("timeupdate", this);
 };
 
 
@@ -167,16 +161,8 @@ AudioPlayer.prototype._unbindEvents = function() {
   for ( i = 0 ; i < _ref.length ; i++ ) {
     this.el.removeEventListener(_ref[i], this);
   }
-  this.el.removeEventListener("timeupdate", this);
 };
 
-
-AudioPlayer.prototype._timeUpdate = function(e) {
-  var _ref;
-  if (!this.isLoading()) {
-    return (_ref = this.ui) != null ? typeof _ref.AudioPlayerTimeUpdated === "function" ? _ref.AudioPlayerTimeUpdated(this.percentComplete()) : void 0 : void 0;
-  }
-};
 
 AudioPlayer.prototype.destroy = function() {
   this.ui = null;
@@ -297,8 +283,6 @@ AudioPlayerUI.prototype.loadText = function( url ) {
       _this.apiScrollpane.getContentPane().html(data);
       _this.apiScrollpane.reinitialise();
    });
-
-  $('#info-line').html( "<i>File: </i>" + url );
 }
 
 
@@ -307,6 +291,11 @@ AudioPlayerUI.prototype.loadAudio = function( url ) {
 
   this.$progressBar.css( {width: 0} );
   this.audioPlayer.setAudioSrc( url );
+}
+
+
+AudioPlayerUI.prototype.setInfoLine = function(s) {
+  $('#info-line').html( "<i>File: </i>" + s );
 }
 
 
@@ -334,6 +323,9 @@ AudioPlayerUI.prototype.handleEvent = function( event ) {
   if ( event.type == "ended" ) {
     this.handleServerPost( {target: {id: "ended"}} );
   }
+  else if ( event.type == "timeupdate") {
+    this.AudioPlayerTimeUpdated( this.audioPlayer.percentComplete() );
+  }
 }
 
 
@@ -349,6 +341,7 @@ AudioPlayerUI.prototype._bindEvents = function() {
 
   // Capture track ended event from audio player
   this.audioPlayer.el.addEventListener("ended", this);
+  this.audioPlayer.el.addEventListener("timeupdate", this);
 };
 
 
@@ -362,6 +355,7 @@ AudioPlayerUI.prototype._unbindEvents = function() {
   $(this.el).find(".server").off("click", this.handleServerPost); 
 
   this.audioPlayer.el.removeEventListener("ended", this);
+  this.audioPlayer.el.removeEventListener("timeupdate", this);
 
   return (_ref3 = this.$progressContainer) != null ? _ref3.off("mouseup", this.seek) : void 0;
 };

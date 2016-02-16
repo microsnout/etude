@@ -10,7 +10,11 @@
                  [org.clojure/java.jdbc "0.2.3"]
                  [org.xerial/sqlite-jdbc "3.7.2"]
                  ;;
-                 [lib-noir "0.9.9" :exclusions [org.eclipse.jetty/jetty-io org.eclipse.jetty/jetty-util]]]
+                 [lib-noir "0.9.9" :exclusions [org.eclipse.jetty/jetty-io org.eclipse.jetty/jetty-util]]
+                 ;; Audio file mp3 tag editing
+                 [claudio "0.1.3"]
+                 ;;[org/jaudiotagger "2.0.3"]
+                 ]
   :plugins [[lein-ring "0.8.12"]]
   :ring {:handler crim.handler/app
          :init crim.handler/init

@@ -7,7 +7,9 @@
             [noir.session :as session]
             [clojure.string :as st]
             [clojure.java.io :as io]
-            [clojure.data.json :as json]))
+            [clojure.data.json :as json]
+            [claudio.id3 :as id3]
+            ))
 
 
 (defn control []
@@ -52,50 +54,64 @@
 
 (def test-state
   {
-    :playMode    1
     :playIndex   0
     :audioPath   "data/crim/audio/"
     :textPath    "resources/public/data/crim/text/"
     :audioExt    ".m4a"
     :textExt     ".txt"
     :fileList    ["01_01" "01_02" "10_01" "01_10"]
+    :id3Title    false
     })
 
 (defn scan-dataset [name]
-  (let [path (str "resources/public/data/"  name  "/text")
-        list (.list (io/file path))
-        names (map (fn [s] (st/replace-first s ".txt" "")) list)]
+  (let [root (str "resources/public/data/" name)
+        dset (slurp (str root "/dataset.json"))
+        json (st/replace dset #"//.*\n" "\n")
+        spec (json/read-str json :key-fn keyword)
+        text (str root "/text")
+        list (.list (io/file text))
+        names (map (fn [s] (st/replace-first s (:textExt spec) "")) list)]
 
     {
-      :playMode   1
       :playIndex  0
       :audioPath  (str "data/" name "/audio/")
       :textPath   (str "resources/public/data/" name "/text/")
-      :audioExt   ".mp3"
-      :textExt    ".txt"
+      :audioExt   (:audioExt spec) 
+      :textExt    (:textExt spec) 
       :fileList   (shuffle names)
+      :id3Title   (:id3Title spec)
     }
   )
 )
 
+
+(def data-set (scan-dataset "offqc"))
+;;(defonce data-set (future (scan-dataset "offqc")))
 
 ;; Client event handlers
 
 (defn gen-cmd-resp []
   (let [st (session/get :state)
         px (:playIndex st)
-        fn ((:fileList st) px)]
+        fn ((:fileList st) px)
+        tp (str (:textPath st) fn (:textExt st))
+        ap (str (:audioPath st) fn (:audioExt st))
+        io (clojure.java.io/file (str "resources/public/" ap))
+        il (if (:id3Title st) (:title (id3/read-tag io)) fn)]
     [
-      [:loadText
-          (str (:textPath st) fn (:textExt st))]
-      [:loadAudio
-          (str (:audioPath st) fn (:audioExt st))]
+      [:loadText tp]
+      [:loadAudio ap]
+      [:setInfoLine il]
     ]
   )
 )
 
 
 (defn event-startup []
+  ;; Turn off debugging output from claudio
+  (.setLevel (java.util.logging.Logger/getLogger "org.jaudiotagger")
+           java.util.logging.Level/OFF)
+
   (if (empty? (session/get :state))
     (session/put! :state data-set))
   (gen-cmd-resp)
@@ -126,9 +142,6 @@
 
 ;; ******
 
-
-(def data-set (scan-dataset "offqc"))
-;;(defonce data-set (future (scan-dataset "crim")))
 
 
 (defn ctl-get-text [req]
