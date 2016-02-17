@@ -2,6 +2,7 @@
   (:require [compojure.core :refer :all]
             [crim.views.layout :as layout]
             [crim.models.db :as db]
+            [hiccup.page :refer [html5]]
             [hiccup.form :refer :all]
             [hiccup.element :refer :all]
             [noir.session :as session]
@@ -21,7 +22,7 @@
 
       [:div#controls        
         [:ul.ctl-list
-          [:li [:a {:role "button", :href "#", :id "stop"} "3"]]
+          [:li [:a {:role "button", :href "#", :id "stop"} "'"]]
           [:li [:a {:role "button", :href "#", :id "back", :class "server"} "7"]]
           [:li [:a {:role "button", :href "#", :id "play-pause"} "1"]]
           [:li [:a {:role "button", :href "#", :id "replay"} "9"]]
@@ -33,6 +34,13 @@
              
         [:div.audio-player-progress
           [:div.audio-player-progress-bar]]
+
+        [:span.vert-split]
+
+        [:ul.ctl-list
+          [:li [:a {:role "button", :href "#", :id "add", :class "server"} "="]]
+          [:li [:a {:role "button", :href "#", :id "sub", :class "server"} "-"]]
+        ]
 
         [:span.vert-split]
       ]
@@ -51,6 +59,12 @@
 
 
 ;; Dataset Access funtions
+
+(def blank-user-state
+  {
+    :activeSessions   []
+  })
+
 
 (def test-state
   {
@@ -73,6 +87,7 @@
         names (map (fn [s] (st/replace-first s (:textExt spec) "")) list)]
 
     {
+      :setName    name
       :playIndex  0
       :audioPath  (str "data/" name "/audio/")
       :textPath   (str "resources/public/data/" name "/text/")
@@ -85,8 +100,37 @@
 )
 
 
-(def data-set (scan-dataset "offqc"))
+;; Find all dataset directories and scan their contents
+;;
+(defn find-datasets []
+  (let [root "resources/public/data/"
+        dirs (seq (.list (io/file root)))]
+    (map scan-dataset dirs)
+  )
+)
+
+
+(def data-sets (find-datasets))
 ;;(defonce data-set (future (scan-dataset "offqc")))
+
+
+(defn get-dataset-table []
+  [:table 
+    [:colgroup 
+      [:col.nameCol]
+      [:col.sizeCol]]
+    [:tr
+      [:th "Name"]
+      [:th "Size"]]
+    (map
+      (fn [ds]
+        [:tr 
+          [:td (:setName ds)]
+          [:td (count (:fileList ds))]])
+      data-sets)
+  ]
+)
+
 
 ;; Client event handlers
 
@@ -113,8 +157,10 @@
            java.util.logging.Level/OFF)
 
   (if (empty? (session/get :state))
-    (session/put! :state data-set))
+    (session/put! :state (first data-sets)))
+
   (gen-cmd-resp)
+;;  [[:loadDatasetTable]]
 )
 
 
@@ -149,6 +195,11 @@
 )
 
 
+(defn ctl-get-dataset-table [] 
+  (html5 
+    (get-dataset-table)))
+
+
 (defn ctl-post-user-event [ params ]
   (json/write-str
     (case (:id params)
@@ -167,6 +218,7 @@
 
 (defroutes control-routes
   (GET "/ctl-get-text" request (ctl-get-text (:params request)))
+  (GET "/ctl-get-dataset-table" request (ctl-get-dataset-table))
   (POST "/ctl-post-user-event" request (ctl-post-user-event (:params request)))
   (GET "/control" [] (control))
   (GET "/userlist" [] (userlist))

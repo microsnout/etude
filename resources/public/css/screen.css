@@ -299,3 +299,52 @@ a.buttonPushed { color: green; }
     background-color: #808e97;
     border-right: 1px solid red;
 }
+
+
+/* Table styles */
+
+table {
+    border-spacing: 1;
+}
+
+colgroup {
+    background-color: #e8c4b7;
+}
+
+tr:hover {
+    background-color: #faa98c;
+    cursor: pointer;
+}
+
+
+th {
+    background-color: white;
+}
+
+.nameCol {
+    width: 100px;
+}
+
+.sizeCol {
+    width: 50px;
+}
+
+td {
+    padding-left: 10px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

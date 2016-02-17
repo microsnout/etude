@@ -108,7 +108,6 @@ AudioPlayer.prototype.duration = function() {
 
 AudioPlayer.prototype.percentComplete = function() {
   var number;
-  console.log( "percentComplete " + this.el.currentTime + " of " + this.el.duration)
   number = ~~((this.el.currentTime / this.el.duration) * 10000);
   return number / 10000;
 };
@@ -286,6 +285,20 @@ AudioPlayerUI.prototype.loadText = function( url ) {
 }
 
 
+AudioPlayerUI.prototype.loadDatasetTable = function() {
+  console.log("loadDatasetTable:");
+
+  // Save context of this obj for the callback func
+  var _this = this;
+
+  $.get("/ctl-get-dataset-table", {}, function(data) {
+      console.log(data);
+      _this.apiScrollpane.getContentPane().html(data);
+      _this.apiScrollpane.reinitialise();
+   });
+}
+
+
 AudioPlayerUI.prototype.loadAudio = function( url ) {
   console.log("loadAudio:" + url);
 
@@ -319,7 +332,6 @@ AudioPlayerUI.prototype.handleServerPost = function( event ) {
 
 
 AudioPlayerUI.prototype.handleEvent = function( event ) {
-  console.log("AudioPlayerUI.handleEvent:" + event.type);
   if ( event.type == "ended" ) {
     this.handleServerPost( {target: {id: "ended"}} );
   }
