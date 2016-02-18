@@ -9,7 +9,6 @@
             [clojure.string :as st]
             [clojure.java.io :as io]
             [clojure.data.json :as json]
-            [claudio.id3 :as id3]
             ))
 
 
@@ -21,22 +20,6 @@
       [:div#textbox [:div#display.scroll-pane]]
 
       [:div#controls        
-        [:ul.ctl-list
-          [:li [:a {:role "button", :href "#", :id "stop"} "'"]]
-          [:li [:a {:role "button", :href "#", :id "back", :class "server"} "7"]]
-          [:li [:a {:role "button", :href "#", :id "play-pause"} "1"]]
-          [:li [:a {:role "button", :href "#", :id "replay"} "9"]]
-          [:li [:a {:role "button", :href "#", :id "next", :class "server"} "8"]]
-          [:li [:a {:role "button", :href "#", :id "loop"} "("]]
-        ]
-
-        [:span.vert-split]
-             
-        [:div.audio-player-progress
-          [:div.audio-player-progress-bar]]
-
-        [:span.vert-split]
-
         [:ul.ctl-list
           [:li [:a {:role "button", :href "#", :id "add", :class "server"} "="]]
           [:li [:a {:role "button", :href "#", :id "sub", :class "server"} "-"]]
@@ -103,9 +86,11 @@
 ;; Find all dataset directories and scan their contents
 ;;
 (defn find-datasets []
-  (let [root "resources/public/data/"
-        dirs (seq (.list (io/file root)))]
-    (map scan-dataset dirs)
+  (let [root (io/file "resources/public/data/")
+        dirs (map #(.getName %) (filter #(.isDirectory %) (.listFiles root)))]
+    (zipmap
+      (map keyword dirs)
+      (map scan-dataset dirs))
   )
 )
 
@@ -114,99 +99,67 @@
 ;;(defonce data-set (future (scan-dataset "offqc")))
 
 
-(defn get-dataset-table []
-  [:table 
-    [:colgroup 
-      [:col.nameCol]
-      [:col.sizeCol]]
-    [:tr
-      [:th "Name"]
-      [:th "Size"]]
-    (map
-      (fn [ds]
-        [:tr 
-          [:td (:setName ds)]
-          [:td (count (:fileList ds))]])
-      data-sets)
-  ]
+(defn get-control-html []
+  (html5
+    [:table 
+      [:colgroup 
+        [:col.nameCol]
+        [:col.sizeCol]]
+      [:tr
+        [:th "Name"]
+        [:th "Size"]]
+      (map
+        (fn [ds]
+          [:tr 
+            {:data-name (:setName ds)}
+            [:td (:setName ds)]
+            [:td (count (:fileList ds))]])
+        (vals data-sets))
+    ]
+  )
 )
 
 
 ;; Client event handlers
 
 (defn gen-cmd-resp []
-  (let [st (session/get :state)
-        px (:playIndex st)
-        fn ((:fileList st) px)
-        tp (str (:textPath st) fn (:textExt st))
-        ap (str (:audioPath st) fn (:audioExt st))
-        io (clojure.java.io/file (str "resources/public/" ap))
-        il (if (:id3Title st) (:title (id3/read-tag io)) fn)]
+  (let [st (session/get :state)]
     [
-      [:loadText tp]
-      [:loadAudio ap]
-      [:setInfoLine il]
+      [:loadControlHtml]
     ]
   )
 )
 
 
 (defn event-startup []
-  ;; Turn off debugging output from claudio
-  (.setLevel (java.util.logging.Logger/getLogger "org.jaudiotagger")
-           java.util.logging.Level/OFF)
-
   (if (empty? (session/get :state))
-    (session/put! :state (first data-sets)))
+    (session/put! :state data-sets))
 
   (gen-cmd-resp)
-;;  [[:loadDatasetTable]]
 )
 
 
-(defn event-next []
+(defn event-add []
   (let
-    [st (session/get :state)
-     px (:playIndex st)
-     nx (mod (inc px) (count (:fileList st)))]
-    (session/put! :state (assoc st :playIndex nx) )
-    (gen-cmd-resp)
+    [st (session/get :state)]
   )
 )
 
 
-(defn event-back []
+(defn event-sub []
   (let
-    [st (session/get :state)
-     px (:playIndex st)
-     nx (mod (dec px) (count (:fileList st)))]
-    (session/put! :state (assoc st :playIndex nx) )
-    (gen-cmd-resp)
+    [st (session/get :state)]
   )
 )
-
-
 ;; ******
 
 
-
-(defn ctl-get-text [req]
-  (slurp (:url req))
-)
-
-
-(defn ctl-get-dataset-table [] 
-  (html5 
-    (get-dataset-table)))
-
-
-(defn ctl-post-user-event [ params ]
+(defn post-user-event [ params ]
   (json/write-str
     (case (:id params)
       "startup" (event-startup)
-      "next"    (event-next)
-      "back"    (event-back)
-      "ended"   (event-next)
+      "add"    (event-add)
+      "sub"    (event-sub)
       [])
   )
 )
@@ -217,12 +170,11 @@
 
 
 (defroutes control-routes
-  (GET "/ctl-get-text" request (ctl-get-text (:params request)))
-  (GET "/ctl-get-dataset-table" request (ctl-get-dataset-table))
-  (POST "/ctl-post-user-event" request (ctl-post-user-event (:params request)))
+  (GET "/ctl-get-control-html" request (get-control-html))
+  (POST "/ctl-post-user-event" request (post-user-event (:params request)))
   (GET "/control" [] (control))
   (GET "/userlist" [] (userlist))
-  (GET "/logout" []
-       (shutdown)
-       nil)
+;  (GET "/logout" []
+;       (shutdown)
+;       nil)
 )

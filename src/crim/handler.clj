@@ -5,7 +5,8 @@
         hiccup.middleware
         crim.routes.home
         crim.routes.auth
-        crim.routes.control)
+        [crim.routes.player :only [player-routes]]
+        [crim.routes.control :only [control-routes]])
   (:require [compojure.handler :as handler]
             [compojure.route :as route]
             [crim.models.db :as db]
@@ -26,7 +27,7 @@
   (route/not-found "Not Found Yo"))
 
 (def app
-  (-> (routes home-routes control-routes auth-routes app-routes)
+  (-> (routes home-routes control-routes player-routes auth-routes app-routes)
       (handler/site)
       (wrap-base-url)
       (session/wrap-noir-session {:store (memory-store)})

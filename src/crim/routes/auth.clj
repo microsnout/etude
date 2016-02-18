@@ -63,10 +63,9 @@
         [user (db/get-user id)]
         (if (= pass (:pass user))
           (let
-            [st (:state user)
-             ns (if st st {})]
+            [st (:state user {})]
             (session/put! :user id)
-            (session/put! :state ns)
+            (session/put! :state st)
             (redirect "/control"))
           (do
             (rule false [:pass "Invalid password"])
@@ -103,6 +102,7 @@
       (db/update-user-state id (session/get :state))
       (session/clear!)
       (redirect "/"))
+    (println "LOGOUT no user")
   )
 )
 

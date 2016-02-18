@@ -17,3 +17,4 @@ pom.xml
 *.m4a
 *.txt
 .DS_Store
+resources/public/data/yabla

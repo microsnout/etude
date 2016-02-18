@@ -13,7 +13,6 @@
                  [lib-noir "0.9.9" :exclusions [org.eclipse.jetty/jetty-io org.eclipse.jetty/jetty-util]]
                  ;; Audio file mp3 tag editing
                  [claudio "0.1.3"]
-                 ;;[org/jaudiotagger "2.0.3"]
                  ]
   :plugins [[lein-ring "0.8.12"]]
   :ring {:handler crim.handler/app
