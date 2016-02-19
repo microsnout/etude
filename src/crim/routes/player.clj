@@ -116,9 +116,70 @@
 ;; ******
 
 
+;; mmake-word-index
+;;  - find all acceptable words in text
+;;  - return ( (s e "word1") (s e "word2") ) list of start end index of words
+;;
+(defn make-word-index [txt]
+  (seq
+    (loop [match (re-matcher #"\p{L}[-'\p{L}]*\p{L}" txt)
+           out []]
+      (if (.find match)
+        (recur
+          match
+          (conj out (list (.group match) (.start match) (.end match))) 
+        )
+        out
+      )
+    )
+  )
+)
+
+
+(defn make-cloze-text [ txt word-list min-gap ]
+  (apply str
+    (loop [words  word-list
+           frags  []
+           lastx  0 ]
+      (if (empty? words)
+        ;; Return list of string fragments - adding tailing frag
+        (conj 
+          frags 
+          (.substring txt lastx (count txt)))
+        ;; else there are more words
+        (let [[wstr startx endx]  (first words)]
+          (if (>= startx (+ lastx min-gap))
+            ;; Replace this word with input box
+            (recur
+              (rest words)
+              (conj 
+                frags 
+                (.substring txt lastx startx) 
+                (format 
+                    "<input type='text' class='cloze' size=%d data-word='%s'>" 
+                    (count wstr) (.toLowerCase wstr)))
+              endx
+            )
+            ;; else skip this word
+            (recur
+              (rest words) frags lastx)
+          )
+        )
+      )
+    )
+  )
+)
+
 
 (defn play-get-text [req]
-  (slurp (:url req))
+;;  (slurp (:url req))
+
+  (let [txt (slurp (:url req))]
+    (make-cloze-text 
+      txt
+      (make-word-index txt)
+      80)
+  )
 )
 
 
