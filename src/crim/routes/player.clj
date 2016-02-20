@@ -122,7 +122,7 @@
 ;;
 (defn make-word-index [txt]
   (seq
-    (loop [match (re-matcher #"\p{L}[-'\p{L}]*\p{L}" txt)
+    (loop [match (re-matcher #"\p{L}[-'\p{L}]+\p{L}" txt)
            out []]
       (if (.find match)
         (recur
@@ -140,7 +140,8 @@
   (apply str
     (loop [words  word-list
            frags  []
-           lastx  0 ]
+           lastx  0
+           gap    (* 5 (quot (rand-int min-gap) 5))]
       (if (empty? words)
         ;; Return list of string fragments - adding tailing frag
         (conj 
@@ -148,7 +149,7 @@
           (.substring txt lastx (count txt)))
         ;; else there are more words
         (let [[wstr startx endx]  (first words)]
-          (if (>= startx (+ lastx min-gap))
+          (if (>= startx (+ lastx gap))
             ;; Replace this word with input box
             (recur
               (rest words)
@@ -159,10 +160,11 @@
                     "<input type='text' class='cloze' size=%d data-word='%s'>" 
                     (count wstr) (.toLowerCase wstr)))
               endx
+              min-gap
             )
             ;; else skip this word
             (recur
-              (rest words) frags lastx)
+              (rest words) frags lastx gap)
           )
         )
       )

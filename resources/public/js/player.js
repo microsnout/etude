@@ -284,6 +284,15 @@ AudioPlayerUI.prototype.loadText = function( url ) {
   $.get("/play-get-text", { url: url}, function(data) {
       _this.apiScrollpane.getContentPane().html(data);
       _this.apiScrollpane.reinitialise();
+
+      // Focus the first input field and make return same as tab
+      $("#textbox").find("input.cloze").pressEnter( function() {
+          $(this).next().focus();
+      }).focusout( function() {
+          $(this).css( 
+              "color", 
+              $(this).attr("data-word") == $(this).val() ? "green" : "red");
+      }).eq(0).focus();
    });
 }
 
@@ -397,6 +406,21 @@ $(document).ready(function(){
     )
 
 });
+
+
+$.fn.pressEnter = function(fn) {  
+
+    return this.each(function() {  
+        $(this).bind('enterPress', fn);
+        $(this).keyup(function(e){
+            if(e.keyCode == 13)
+            {
+              $(this).trigger("enterPress");
+            }
+        })
+    });  
+ }; 
+
 
 
 
