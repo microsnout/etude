@@ -44,7 +44,9 @@ Controler.prototype.loadControlHtml = function() {
 
       $('#display tr').click( function() {
         //console.log( $(this).attr('data-name') );
-         window.location.href = "/player?active=" + $(this).attr('data-name');
+         window.location.href = 
+            "/player?active=" + $(this).attr('data-name')
+            + "&activity=" + $('input[name=Activity]:checked').val();
  
       });
    });

@@ -286,10 +286,17 @@ AudioPlayerUI.prototype.loadText = function( url ) {
       _this.apiScrollpane.reinitialise();
 
       // Focus the first input field and make return same as tab
-      $("#textbox").find("input.cloze").pressEnter( function() {
-          $(this).next().focus();
-      }).focusout( function() {
-          $(this).css( 
+      $("#textbox").mousedown (
+          // Prevent mouse click in box from defocusing current input field
+          function(e) { e.preventDefault(); }
+      ).find("input.cloze").mousedown( 
+          // Stop mouse events within input fields
+          function(e) { e.preventDefault(); }
+      ).pressEnter( 
+          // Make enter act the same as tab
+          function() { $(this).next().focus(); }
+      ).focusout( function() {
+          $(this).css({ 'font-weight': 'bold' }).css( 
               "color", 
               $(this).attr("data-word") == $(this).val() ? "green" : "red");
       }).eq(0).focus();

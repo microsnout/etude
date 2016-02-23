@@ -101,20 +101,31 @@
 
 (defn get-control-html []
   (html5
-    [:table 
-      [:colgroup 
-        [:col.nameCol]
-        [:col.sizeCol]]
-      [:tr
-        [:th "Name"]
-        [:th "Size"]]
-      (map
-        (fn [ds]
-          [:tr 
-            {:data-name (:setName ds)}
-            [:td (:setName ds)]
-            [:td (count (:fileList ds))]])
-        (vals data-sets))
+    [:div.flexContainer
+      [:div
+        [:table.flexItem 
+          [:colgroup 
+            [:col.nameCol]
+            [:col.sizeCol]]
+          [:tr
+            [:th "Name"]
+            [:th "Size"]]
+          (map
+            (fn [ds]
+              [:tr 
+                {:data-name (:setName ds)}
+                [:td (:setName ds)]
+                [:td (count (:fileList ds))]])
+            (vals data-sets))
+        ]
+      ]
+      [:div
+        [:form { :action "" } 
+          [:b "Session Type"] [:br]
+          [:input { :type "radio" :name "Activity" :value "review" :checked true } "Review"] 
+          [:br]
+          [:input { :type "radio" :name "Activity" :value "cloze"} "Cloze"]]
+        ]
     ]
   )
 )

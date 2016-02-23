@@ -13,6 +13,7 @@
 
 (defn player [req]
   (session/put! :active (keyword (get req :active)))
+  (session/put! :activity (keyword (get req :activity)))
 
   (layout/common 
       :include-js "js/player.js"
@@ -157,7 +158,7 @@
                 frags 
                 (.substring txt lastx startx) 
                 (format 
-                    "<input type='text' class='cloze' size=%d data-word='%s'>" 
+                    "<input type='text' class='cloze' spellcheck=false font-weight=bold size=%d data-word='%s'>" 
                     (count wstr) (.toLowerCase wstr)))
               endx
               min-gap
@@ -174,13 +175,18 @@
 
 
 (defn play-get-text [req]
-;;  (slurp (:url req))
-
-  (let [txt (slurp (:url req))]
-    (make-cloze-text 
-      txt
-      (make-word-index txt)
-      80)
+  (let [activity (session/get :activity)]
+    (if (= activity :review)
+      ;; simple text review
+      (slurp (:url req))
+      ;; else cloze test
+      (let [txt (slurp (:url req))]
+        (make-cloze-text 
+          txt
+          (make-word-index txt)
+          80)
+      )
+    )
   )
 )
 

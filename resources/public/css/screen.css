@@ -342,7 +342,19 @@ td {
 }
 
 
+.flexContainer {
+    display: -webkit-flex;
+    display: flex;
+}
 
+.flexItem {
+    -webkit-flex: 1;
+    flex: 1;
+}
+
+.flexContainer div:nth-of-type(1n+2) {
+    margin-left: 50px;
+}
 
 
 
