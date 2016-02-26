@@ -1,5 +1,6 @@
 (ns crim.routes.control
   (:require [compojure.core :refer :all]
+            [clojure.test :refer [function?]]
             [crim.views.layout :as layout]
             [crim.models.db :as db]
             [hiccup.page :refer [html5]]
@@ -11,13 +12,14 @@
             [clojure.data.json :as json]
             ))
 
+(declare get-control-html)
 
 (defn control []
   (layout/common 
       :include-js "js/site.js"
       [:br]
       [:div#info-line]
-      [:div#textbox [:div#display.scroll-pane]]
+      [:div#textbox [:div#display.scroll-pane (get-control-html)]]
 
       [:div#controls        
         [:ul.ctl-list
@@ -26,6 +28,10 @@
         ]
 
         [:span.vert-split]
+
+        [:ul.ctl-list
+          [:li [:a {:role "button", :href "#", :id "play"} "1"]]
+        ]
       ]
   )
 )
@@ -99,33 +105,69 @@
 ;;(defonce data-set (future (scan-dataset "offqc")))
 
 
+(defn table-x [ tableId recList options & args ]
+  (let
+    [radio      (get options :radio false)
+     colData    (partition 3 args)
+     colNames   (map first colData)
+     colWidths  (map second colData)
+     colFuncs   (map #(second (rest %)) colData)]
+  
+    [:table.table-x { :id tableId }
+      [:colgroup
+        (for [x colWidths]
+          [:col {:width x}])
+      ]
+      [:tr
+        (for [n colNames]
+          [:th n])
+      ]
+      (map
+        (fn [rec]
+          (let [rowId (name (gensym "ID"))]
+            [:tr 
+              {:data-name (:setName rec)}
+              (map 
+                (fn [cn cw cf]
+                  (if (= radio cn)
+                    [:td
+                      [:input {:type "radio" :name (name tableId) :id rowId :data-id (cf rec)}]]
+                    ;; else
+                    [:td
+                      ( if radio
+                        [:label {:for rowId} (cf rec)]
+                        (cf rec))
+                    ]
+                  )
+                )
+                colNames
+                colWidths
+                colFuncs
+              )
+            ]
+          )
+        )
+        recList
+      )
+    ]
+  )
+)
+
+
 (defn get-control-html []
   (html5
     [:div.flexContainer
-      [:div
-        [:table.flexItem 
-          [:colgroup 
-            [:col.nameCol]
-            [:col.sizeCol]]
-          [:tr
-            [:th "Name"]
-            [:th "Size"]]
-          (map
-            (fn [ds]
-              [:tr 
-                {:data-name (:setName ds)}
-                [:td (:setName ds)]
-                [:td (count (:fileList ds))]])
-            (vals data-sets))
-        ]
+      [:div.flexItem
+        (table-x :dataset (vals data-sets) {:radio ""} 
+          "" "40px" :setName
+          "Data Set" "100px" :setName 
+          "Size" "50px" #(count (:fileList %)))
       ]
-      [:div
-        [:form { :action "" } 
-          [:b "Session Type"] [:br]
-          [:input { :type "radio" :name "Activity" :value "review" :checked true } "Review"] 
-          [:br]
-          [:input { :type "radio" :name "Activity" :value "cloze"} "Cloze"]]
-        ]
+      [:div.flexItem
+        (table-x :activity '("Review" "Cloze") {:radio ""}
+          "" "40px" #(st/lower-case %) 
+          "Session Type" "100px" (fn [x] x))
+      ]
     ]
   )
 )
@@ -136,7 +178,6 @@
 (defn gen-cmd-resp []
   (let [st (session/get :state)]
     [
-      [:loadControlHtml]
     ]
   )
 )
@@ -145,14 +186,14 @@
 (defn event-startup []
   (if (empty? (session/get :state))
     (session/put! :state data-sets))
-
-  (gen-cmd-resp)
+  []
 )
 
 
 (defn event-add []
   (let
     [st (session/get :state)]
+  []
   )
 )
 
@@ -160,6 +201,7 @@
 (defn event-sub []
   (let
     [st (session/get :state)]
+  []
   )
 )
 ;; ******

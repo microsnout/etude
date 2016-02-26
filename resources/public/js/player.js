@@ -173,10 +173,15 @@ AudioPlayer.prototype.destroy = function() {
 // ************* AudioPlayerUI Class 
 // ***************************************************************************************
 
+const scoreGreen = 1;
+const scoreRed   = 0x10000;
+const greenMask  = 0x0ffff;
+const redShift   = 16;
+
+
 this.AudioPlayerUI = (function() {
 
     function AudioPlayerUI(options) {
-      this.tracks = null;
 
       // Set options
       for ( var key in options ) {
@@ -190,6 +195,10 @@ this.AudioPlayerUI = (function() {
       var pane = $('.scroll-pane');
       pane.jScrollPane();
       this.apiScrollpane = pane.data('jsp');
+
+      //  statistics
+      this.score = 0;
+      this.total = 0;
     };
 
 
@@ -275,6 +284,23 @@ AudioPlayerUI.prototype.replayTrack = function() {
 };
 
 
+AudioPlayerUI.prototype.recordWord = function( text, word ) {
+  this.score += ((text == word) ? scoreGreen : scoreRed);
+
+  var txt = 
+    "Score: " + 
+    "<span style=color:green>" + (this.score & greenMask) + "</span>" + 
+    "-" +
+    "<span style=color:red>" + (this.score >>> redShift) + "</span>" +
+    "  Total: " + 
+    "<span style=color:green>" + (this.total & greenMask) + "</span>" + 
+    "-" +
+    "<span style=color:red>" + (this.total >>> redShift) + "</span>";
+
+  $('#play-score').html(txt);
+};
+
+
 AudioPlayerUI.prototype.loadText = function( url ) {
   console.log("loadText:" + url);
 
@@ -296,9 +322,12 @@ AudioPlayerUI.prototype.loadText = function( url ) {
           // Make enter act the same as tab
           function() { $(this).next().focus(); }
       ).focusout( function() {
+          var text = $(this).val();
+          var word = $(this).attr("data-word");
+          _this.recordWord(text, word);
           $(this).css({ 'font-weight': 'bold' }).css( 
               "color", 
-              $(this).attr("data-word") == $(this).val() ? "green" : "red");
+              word == text ? "green" : "red");
       }).eq(0).focus();
    });
 }
@@ -313,7 +342,7 @@ AudioPlayerUI.prototype.loadAudio = function( url ) {
 
 
 AudioPlayerUI.prototype.setInfoLine = function(s) {
-  $('#info-line').html( "<i>File: </i>" + s );
+  $('#play-title').html( "<i>File: </i>" + s );
 }
 
 

@@ -12,13 +12,14 @@
 
 
 (defn player [req]
-  (session/put! :active (keyword (get req :active)))
+  (session/put! :active (keyword (get req :dataset)))
   (session/put! :activity (keyword (get req :activity)))
 
   (layout/common 
       :include-js "js/player.js"
       [:br]
-      [:div#info-line]
+      [:div#info-line.flexContainer
+        [:div#play-title] [:div#play-score]]
       [:div#textbox [:div#display.scroll-pane]]
 
       [:div#controls        

@@ -11,6 +11,8 @@ this.Controler = (function() {
         this[key] = options[key];
       }
 
+      this.setUI( options.ui );
+
       // Initialise jScrollPane
       var pane = $('.scroll-pane');
       pane.jScrollPane();
@@ -24,6 +26,7 @@ this.Controler = (function() {
       var $el = $(this.el);
       this.$addButton = $el.find("#add");
       this.$subButton = $el.find("#sub");
+      this.$playButton = $el.find("#play");
       this._bindEvents();
     };
 
@@ -41,15 +44,24 @@ Controler.prototype.loadControlHtml = function() {
       console.log(data);
       _this.apiScrollpane.getContentPane().html(data);
       _this.apiScrollpane.reinitialise();
-
-      $('#display tr').click( function() {
-        //console.log( $(this).attr('data-name') );
-         window.location.href = 
-            "/player?active=" + $(this).attr('data-name')
-            + "&activity=" + $('input[name=Activity]:checked').val();
- 
-      });
    });
+}
+
+
+Controler.prototype.playControl = function() {
+  console.log("playControl:");
+  var parms = "";
+  var space = "?";
+
+  $('.table-x').each( function(index) {
+    parms += space;
+    parms += $(this).attr('id');
+    parms += "=";
+    parms += $(this).find('input:checked').attr("data-id");
+    space = "&";
+  });
+
+  window.location.href = "/player" + parms; 
 }
 
 
@@ -84,7 +96,8 @@ Controler.prototype.handleEvent = function( event ) {
 Controler.prototype._bindEvents = function() {
   this.$addButton.on("click", $.proxy(this, "addControl"));
   this.$subButton.on("click", $.proxy(this, "subControl"));
-
+  this.$playButton.on("click", $.proxy(this, "playControl"));
+    
   // Capture click events for all controls with class "server"
   $(this.el).find(".server").on("click", $.proxy(this.handleServerPost, this))  
 };
@@ -93,6 +106,7 @@ Controler.prototype._bindEvents = function() {
 Controler.prototype._unbindEvents = function() {
   this.$addButton.off("click");
   this.$subButton.off("click");
+  this.$playButton.off("click");
   
   $(this.el).find(".server").off("click", this.handleServerPost); 
 };
@@ -105,7 +119,8 @@ $(document).ready(function(){
 
     console.log("Site ready");
 
-    // Create AudioPlayer 
+
+    // Create Controler  
     var controler = new Controler( { ui: document.getElementById("controls") } );
 
     // Start up 
