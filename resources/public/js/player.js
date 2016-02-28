@@ -342,7 +342,7 @@ AudioPlayerUI.prototype.loadAudio = function( url ) {
 
 
 AudioPlayerUI.prototype.setInfoLine = function(s) {
-  $('#play-title').html( "<i>File: </i>" + s );
+  $('#play-title').html( s );
 }
 
 

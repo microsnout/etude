@@ -69,12 +69,13 @@
 
 (defn gen-cmd-resp []
   (let [st (get-active-session)
+        sn (:setName st)
         px (:playIndex st)
         fn ((:fileList st) px)
         tp (str (:textPath st) fn (:textExt st))
         ap (str (:audioPath st) fn (:audioExt st))
         io (clojure.java.io/file (str "resources/public/" ap))
-        il (if (:id3Title st) (:title (id3/read-tag io)) fn)]
+        il (str sn ": " (if (:id3Title st) (:title (id3/read-tag io)) fn))]
     [
       [:loadText tp]
       [:loadAudio ap]
