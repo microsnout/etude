@@ -1,6 +1,6 @@
 (ns crim.models.db
   (:require 
-      [clojure.java.jdbc :as sql]
+      [clojure.java.jdbc :as jdbc]
       [clojure.data.json :as json])
   (:import java.sql.DriverManager))
 
@@ -12,18 +12,17 @@
 
 
 (defn create-tables []
-  (sql/with-connection
+  (jdbc/db-do-commands
     db
 
-    (sql/create-table
+    (jdbc/create-table-ddl
       :guestbook
       [:id "INTEGER PRIMARY KEY AUTOINCREMENT"]
       [:timestamp "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"]
       [:name "TEXT"]
       [:message "TEXT"])
-    (sql/do-commands "CREATE INDEX timestamp_index ON guestbook (timestamp)")
 
-    (sql/create-table
+    (jdbc/create-table-ddl
       :usertable
       [:userid "TEXT PRIMARY KEY"]
       [:pass "TEXT"]
@@ -32,59 +31,50 @@
 )
 
 (defn read-guests []
-  (sql/with-connection
-    db
-    (sql/with-query-results res
-      ["SELECT * FROM guestbook ORDER BY timestamp DESC"]
-      (doall res))))
+  (jdbc/query db
+    ["SELECT * FROM guestbook ORDER BY timestamp DESC"] ))
 
 (defn read-users []
-  (sql/with-connection
-    db
-    (sql/with-query-results res
-      ["SELECT * FROM usertable ORDER BY userid DESC"]
-      (doall res))))
+  (jdbc/query db
+    ["SELECT * FROM usertable ORDER BY userid DESC"] ))
 
 
 (defn get-user [userid]
-  (sql/with-connection
-    db
-    (sql/with-query-results res
-      ["select * from usertable where userid = ?" userid]
-      (if-let [st (first res)]
-        (assoc st :state (json/read-str (:state st) :key-fn keyword))
-        {}
-      )
+  (let 
+    [usr (jdbc/query db 
+                     ["select * from usertable where userid = ?" userid] 
+                     :result-set-fn first)]
+    (if (:state usr) 
+      (assoc usr :state (json/read-str (:state usr) :key-fn keyword))
+      {}
     )
   )
 )
 
 
 (defn save-message [name message]
-  (sql/with-connection
+  (jdbc/insert!
     db
-    (sql/insert-values
-      :guestbook
-      [:name :message :timestamp]
-      [name message (new java.util.Date)])))
+    :guestbook
+    {:name name :message message :timestamp (new java.util.Date)}
+  )
+)
 
 
 (defn create-user [userid password]
-  (sql/with-connection
+  (jdbc/insert!
     db
-    (sql/insert-values 
-      :usertable 
-      [:userid :pass :state]
-      [userid password (json/write-str {})] )))
+    :usertable 
+    {:userid userid :pass password :state (json/write-str {})}
+  )
+)
 
 
 (defn update-user-state [userid new-state]
-  (sql/with-connection
+  (jdbc/update!
     db
-    (sql/update-values
-      :usertable
-      ["userid=?" userid]
-      {:state (json/write-str new-state)}
-    )
+    :usertable
+    {:state (json/write-str new-state)}
+    ["userid=?" userid]
   )
 )

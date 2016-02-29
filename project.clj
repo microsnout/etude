@@ -7,8 +7,8 @@
                  [ring-server "0.3.1"]
                  [org.clojure/data.json "0.2.6"]
                  ;;JDBC dependencies
-                 [org.clojure/java.jdbc "0.2.3"]
-                 [org.xerial/sqlite-jdbc "3.7.2"]
+                 [org.clojure/java.jdbc "0.4.2"]
+                 [org.xerial/sqlite-jdbc "3.8.11"]
                  ;;
                  [lib-noir "0.9.9" :exclusions [org.eclipse.jetty/jetty-io org.eclipse.jetty/jetty-util]]
                  ;; Audio file mp3 tag editing
