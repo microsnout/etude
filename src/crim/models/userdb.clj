@@ -19,6 +19,7 @@
     (jdbc/create-table-ddl
       :wordT
       [:word "TEXT PRIMARY KEY ON CONFLICT IGNORE"]
+      [:score "INTEGER"]
     )
 
     (jdbc/create-table-ddl
@@ -34,7 +35,7 @@
   `(create-tables* ~'UserDB))
 
 (defn add-word* [db wordStr]
-  (get (first (jdbc/insert! db :wordT {:word wordStr}))
+  (get (first (jdbc/insert! db :wordT {:word wordStr, :score 0}))
        (keyword "last_insert_rowid()")))
 
 (defmacro add-word [wordStr]
@@ -48,6 +49,14 @@
 (defmacro get-words []
   `(get-words* ~'UserDB))
 
+(defn get-word* [db wordStr]
+  (jdbc/query db
+              ["select rowid,word,score from wordT where word= ?" wordStr]
+              :result-set-fn first))
+
+(defmacro get-word [wordStr]
+  `(get-word* ~'UserDB ~wordStr))
+
 (defn get-wordid* [db wordStr]
   (jdbc/query db 
               ["select rowid from wordT where word = ?" wordStr] 
@@ -56,6 +65,16 @@
 
 (defmacro get-wordid [wordStr]
   `(get-wordid* ~'UserDB ~wordStr))
+
+(defn update-word* [db wordStr newScore]
+  (let [result (jdbc/execute! db 
+                              ["update wordT set score = score + ? where word = ?" newScore wordStr])]
+    (if (zero? (first result)) 
+      (jdbc/insert! db :wordT {:word wordStr, :score newScore})
+      result)))
+
+(defmacro update-word [wordStr newScore]
+  `(update-word* ~'UserDB ~wordStr ~newScore))
 
 (defn add-ref* [db word pathStr]
   (let [id  (get-wordid* db word)
