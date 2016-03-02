@@ -186,6 +186,8 @@
 (defn event-startup []
   (if (empty? (session/get :state))
     (session/put! :state data-sets))
+
+  ;; Return commands to client
   []
 )
 

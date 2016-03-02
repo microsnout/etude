@@ -1,6 +1,7 @@
 (ns crim.routes.player
   (:require [compojure.core :refer :all]
             [crim.views.layout :as layout]
+            [crim.models.userdb :as udb]
             [hiccup.form :refer :all]
             [hiccup.element :refer :all]
             [noir.session :as session]
@@ -105,6 +106,23 @@
 )
 
 
+(defn event-ended [ results ]
+  (let
+    [id (session/get :user)
+     st (get-active-session)
+     px (:playIndex st)
+     nx (mod (inc px) (count (:fileList st)))]
+
+    (update-active-state :playIndex nx)
+    
+    ;; Update user db here
+    ;; Change code above to terminate play not restart
+    
+    (gen-cmd-resp)
+  )
+)
+
+
 (defn event-back []
   (let
     [st (get-active-session)
@@ -199,7 +217,7 @@
       "startup" (event-startup)
       "next"    (event-next)
       "back"    (event-back)
-      "ended"   (event-next)
+      "ended"   (event-ended (:data params))
       [])
   )
 )

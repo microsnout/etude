@@ -199,6 +199,13 @@ this.AudioPlayerUI = (function() {
       //  statistics
       this.score = 0;
       this.total = 0;
+
+      // words seen
+      this.good = [];
+      this.bad  = [];
+
+      this.clozeCount = 0;
+      this.timer = null;
     };
 
 
@@ -284,9 +291,59 @@ AudioPlayerUI.prototype.replayTrack = function() {
 };
 
 
-AudioPlayerUI.prototype.recordWord = function( text, word ) {
-  this.score += ((text == word) ? scoreGreen : scoreRed);
+AudioPlayerUI.prototype.playEnded = function() {
 
+  var results = undefined;
+
+  if ( this.score ) {
+    //  statistics
+    this.total += this.score;
+
+    results = {score: this.score, total: this.total, good: this.good, bad: this.bad};
+
+    // words seen
+    this.good = [];
+    this.bad  = [];
+
+    this.clozeCount = 0;
+    this.score = 0;
+
+    if ( this.timer ) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+  }
+
+  // Notify server that play ended 
+  this.handleServerPost( {target: {id: "ended"}, data: results} );
+};
+
+
+AudioPlayerUI.prototype.recordWord = function( text, word ) {
+  // Update score for this file and build list of words 
+  if ( text == word ) {
+    this.score += scoreGreen;
+    this.good.push(word);
+  }
+  else {
+    this.score += scoreRed;
+    this.bad.push(word);
+  }
+
+  this.clozeCount--;
+
+  // Save context of this obj for the callback func
+  var _this = this;
+
+  if ( this.timer ) {
+    clearTimeout(this.timer);
+
+    this.timer = setTimeout( function() {
+      _this.playEnded();
+    }, 5000);
+  }
+
+  // Build new score text to display
   var txt = 
     "Score: " + 
     "<span style=color:green>" + (this.score & greenMask) + "</span>" + 
@@ -310,6 +367,9 @@ AudioPlayerUI.prototype.loadText = function( url ) {
   $.get("/play-get-text", { url: url}, function(data) {
       _this.apiScrollpane.getContentPane().html(data);
       _this.apiScrollpane.reinitialise();
+
+      // Count of zero means Review mode
+      _this.clozeCount = $("input.cloze").length;
 
       // Focus the first input field and make return same as tab
       $("#textbox").mousedown (
@@ -348,11 +408,16 @@ AudioPlayerUI.prototype.setInfoLine = function(s) {
 
 AudioPlayerUI.prototype.handleServerPost = function( event ) {
   console.log("handleServerPost: " + event.target.id);
+  console.log(event);
 
   // Save context of this obj for the callback func
   var _this = this;
 
-  $.post("/play-post-user-event", { id: event.target.id }, function(data) {
+  var params = ( event.data == undefined ) ? 
+                  { id: event.target.id } :
+                  { id: event.target.id, data: event.data };
+
+  $.post("/play-post-user-event", params, function(data) {
 //      console.log("Post ret:");
 //      console.log(data);
 
@@ -366,8 +431,22 @@ AudioPlayerUI.prototype.handleServerPost = function( event ) {
 
 
 AudioPlayerUI.prototype.handleEvent = function( event ) {
+  // Save context of this obj for the callback func
+  var _this = this;
+
   if ( event.type == "ended" ) {
-    this.handleServerPost( {target: {id: "ended"}} );
+    // Audio file has ended
+    if ( this.clozeCount > 0 ) {
+      // There are unfinished cloze fields allow more time to complete
+      this.timer = setTimeout( function() {
+        // Notify server that play ended 
+        _this.playEnded();
+      }, 5000);
+    }
+    else {
+      // Notify server that play ended 
+      this.playEnded();
+    }
   }
   else if ( event.type == "timeupdate") {
     this.AudioPlayerTimeUpdated( this.audioPlayer.percentComplete() );
