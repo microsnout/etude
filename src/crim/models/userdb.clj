@@ -9,8 +9,8 @@
                   :subprotocol   "sqlite"
 })
 
-(defmacro with-user [name & forms]
-  `(let [~'UserDB ~(assoc userdb-base :subname (str name ".sq3"))] ~@forms))
+(defmacro with-user [username & forms]
+  `(let [~'UserDB (assoc ~userdb-base :subname (str ~username ".sq3"))] ~@forms))
 
 (defn create-tables* [db]
   (jdbc/db-do-commands
@@ -28,11 +28,72 @@
       [:path   "TEXT"]
       ["UNIQUE" "(wordid, path) ON CONFLICT IGNORE"]
     )
+
+    (jdbc/create-table-ddl
+      :sessionT
+      [:rowid    "INTEGER"]
+      [:start    "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"]
+      [:pindex   "INTEGER DEFAULT 0"]
+      [:mingap   "INTEGER DEFAULT 80"]
+      [:setname  "TEXT"]
+      [:activity "TEXT"]
+      [:dataset  "TEXT"]
+    )
   )
 )
 
 (defmacro create-tables []
   `(create-tables* ~'UserDB))
+
+(defn update-session* [db values]
+  (let 
+    [result 
+      (jdbc/update! 
+        db
+        :sessionT 
+        values
+        ["rowid = ?" 1]
+      )
+    ]
+    (if (zero? (first result)) 
+      (jdbc/insert! db :sessionT (assoc values :rowid 1))
+      result
+    )
+  )
+)
+
+(defn create-new-session* [db setname activity dataset mingap]
+  (update-session* 
+    db 
+    {:setname setname :activity (name activity) :dataset (json/write-str dataset) :mingap mingap
+     :start "CURRENT_TIMESTAMP" :pindex 0 }
+  )
+)
+
+(defmacro create-new-session [setname activity dataset & {:keys [mingap] :or {mingap 80}}]
+  `(create-new-session* ~'UserDB ~setname ~activity ~dataset ~mingap))
+
+(defn delete-session* [db rowid]
+  (jdbc/delete! db :sessionT ["rowid = ?" rowid]))
+
+(defmacro delete-session [rowid]
+  `(delete-session* ~'UserDB ~rowid))
+
+(defn update-play-index* [db px]
+  (update-session* db {:pindex px}))
+
+(defmacro update-play-index [px]
+  `(update-play-index* ~'UserDB ~px))
+
+(defn get-current-session* [db]
+  (let [sess (jdbc/query db 
+                         ["select * from sessionT where rowid = ?" 1]
+                         :result-set-fn first)]
+    (if-let [ds (:dataset sess)]
+      (assoc sess :dataset (json/read-str ds :key-fn keyword) :activity (keyword (:activity sess))))))
+
+(defmacro get-current-session []
+  `(get-current-session* ~'UserDB))
 
 (defn add-word* [db wordStr]
   (get (first (jdbc/insert! db :wordT {:word wordStr, :score 0}))

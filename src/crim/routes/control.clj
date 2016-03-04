@@ -3,10 +3,12 @@
             [clojure.test :refer [function?]]
             [crim.views.layout :as layout]
             [crim.models.db :as db]
+            [crim.models.userdb :as udb]
             [hiccup.page :refer [html5]]
             [hiccup.form :refer :all]
             [hiccup.element :refer :all]
             [noir.session :as session]
+            [noir.response :refer [redirect]]
             [clojure.string :as st]
             [clojure.java.io :as io]
             [clojure.data.json :as json]
@@ -30,7 +32,7 @@
         [:span.vert-split]
 
         [:ul.ctl-list
-          [:li [:a {:role "button", :href "#", :id "play"} "1"]]
+          [:li [:a {:role "button", :href "#", :id "play", :class "server"} "1"]]
         ]
       ]
   )
@@ -153,7 +155,6 @@
   )
 )
 
-
 (defn get-control-html []
   (html5
     [:div.flexContainer
@@ -206,6 +207,19 @@
   []
   )
 )
+
+
+(defn event-play [ args ]
+  (let [user     (session/get :user)
+        setname  (keyword (:dataset args))
+        activity (:activity args)]
+    (println "event-play:")
+    (udb/with-user user
+       (udb/create-new-session setname (keyword activity) (setname data-sets))
+       (session/put! :active (udb/get-current-session)))
+    [[:redirect "/player"]]
+  ) 
+)
 ;; ******
 
 
@@ -213,8 +227,9 @@
   (json/write-str
     (case (:id params)
       "startup" (event-startup)
-      "add"    (event-add)
-      "sub"    (event-sub)
+      "add"     (event-add)
+      "sub"     (event-sub)
+      "play"    (event-play (:data params))
       [])
   )
 )
@@ -229,7 +244,7 @@
   (POST "/ctl-post-user-event" request (post-user-event (:params request)))
   (GET "/control" [] (control))
   (GET "/userlist" [] (userlist))
-;  (GET "/logout" []
-;       (shutdown)
-;       nil)
+  (GET "/logout" []
+       (shutdown)
+       nil)
 )

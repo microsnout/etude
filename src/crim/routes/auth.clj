@@ -4,6 +4,7 @@
             [hiccup.form :refer :all]
             [hiccup.element :refer :all]
             [crim.models.db :as db]
+            [crim.models.userdb :as udb]
             [noir.response :refer [redirect]]
             [noir.session :as session]
             [noir.validation :refer [rule errors? has-value? on-error]]))
@@ -63,13 +64,18 @@
         [user (db/get-user id)]
         (if (= pass (:pass user))
           (let
-            [st (:state user {})]
+            [st (:state user {})
+             cs (udb/with-user id (udb/get-current-session))]
             (session/put! :user id)
             (session/put! :state st)
-            (redirect "/control"))
+            (session/put! :active cs)
+            (redirect (if cs "/player" "/control")))
           (do
             (rule false [:pass "Invalid password"])
-            (login-page)))))
+            (login-page))
+        )
+      )
+  )
 )
 
 
@@ -88,8 +94,13 @@
         (db/create-user userid pass1)
         (session/put! :user userid)
         (session/put! :state {})
+        ;; Create users database 
+        (println (str "create tables: " userid ))
+        (udb/with-user userid
+          (udb/create-tables))
         (redirect "/control")
         (catch Exception ex
+          (println (str ex))
           (rule false [:userid "User Id aleady exists"])
           (registration-page))))
 )

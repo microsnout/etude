@@ -5,6 +5,7 @@
             [hiccup.form :refer :all]
             [hiccup.element :refer :all]
             [noir.session :as session]
+            [noir.response :refer [redirect]]
             [clojure.string :as st]
             [clojure.java.io :as io]
             [clojure.data.json :as json]
@@ -13,9 +14,6 @@
 
 
 (defn player [req]
-  (session/put! :active (keyword (get req :dataset)))
-  (session/put! :activity (keyword (get req :activity)))
-
   (layout/common 
       :include-js "js/player.js"
       [:br]
@@ -44,39 +42,19 @@
 )
 
 
-(defn get-active-session []
-  (let
-    [user-state (session/get :state)
-     active-name (session/get :active)]
-    (get user-state active-name)))
-
-
-(defn update-active-state [key val]
-  (let
-    [user-state (session/get :state)
-     active-name (session/get :active)
-     active (get user-state active-name)]
-    (session/put!
-      :state
-      (assoc 
-        user-state
-        active-name
-        (assoc active key val)))
-  )
-)
-
 
 ;; Client event handlers
 
 (defn gen-cmd-resp []
-  (let [st (get-active-session)
-        sn (:setName st)
-        px (:playIndex st)
-        fn ((:fileList st) px)
-        tp (str (:textPath st) fn (:textExt st))
-        ap (str (:audioPath st) fn (:audioExt st))
+  (let [ac (session/get :active)
+        sn (:setname ac)
+        px (:pindex ac)
+        ds (:dataset ac)
+        fn ((:fileList ds) px)
+        tp (str (:textPath ds) fn (:textExt ds))
+        ap (str (:audioPath ds) fn (:audioExt ds))
         io (clojure.java.io/file (str "resources/public/" ap))
-        il (str sn ": " (if (:id3Title st) (:title (id3/read-tag io)) fn))]
+        il (str sn ": " (if (:id3Title ds) (:title (id3/read-tag io)) fn))]
     [
       [:loadText tp]
       [:loadAudio ap]
@@ -84,6 +62,10 @@
     ]
   )
 )
+
+
+(defn update-pindex[px]
+  (session/assoc-in! (list :active :pindex) px))
 
 
 (defn event-startup []
@@ -97,10 +79,12 @@
 
 (defn event-next []
   (let
-    [st (get-active-session)
-     px (:playIndex st)
-     nx (mod (inc px) (count (:fileList st)))]
-    (update-active-state :playIndex nx)
+    [user (session/get :user)
+     ac (session/get :active)
+     px (:pindex ac)
+     nx (mod (inc px) (count (:fileList (:dataset ac))))]
+    (update-pindex nx)
+    (udb/with-user user (udb/update-play-index nx))
     (gen-cmd-resp)
   )
 )
@@ -109,12 +93,19 @@
 (defn event-ended [ results ]
   (let
     [id (session/get :user)
-     st (get-active-session)
-     px (:playIndex st)
-     nx (mod (inc px) (count (:fileList st)))]
+     ac (session/get :active)
+     px (:pindex ac)
+     nx (mod (inc px) (count (:fileList (:dataset ac))))]
 
-    (update-active-state :playIndex nx)
+    (update-pindex nx)
     
+    (udb/with-user id
+      (map 
+        (fn [[word score]] 
+          (udb/update-word word score))
+        (:words results)
+      )
+    )
     ;; Update user db here
     ;; Change code above to terminate play not restart
     
@@ -125,11 +116,25 @@
 
 (defn event-back []
   (let
-    [st (get-active-session)
-     px (:playIndex st)
-     nx (mod (dec px) (count (:fileList st)))]
-    (update-active-state :playIndex nx)
+    [user (session/get :user)
+     ac (session/get :active)
+     px (:pindex ac)
+     nx (mod (dec px) (count (:fileList (:dataset ac))))]
+    (update-pindex nx)
+    (udb/with-user user (udb/update-play-index nx))
     (gen-cmd-resp)
+  )
+)
+
+
+(defn event-stop []
+  (let [user (session/get :user)
+        ac (session/get :active)]
+    (println "event-stop:")
+    (udb/with-user user 
+      (udb/delete-session 1))
+    (session/put! :active nil)
+    [[:redirect "/control"]]
   )
 )
 
@@ -195,8 +200,8 @@
 
 
 (defn play-get-text [req]
-  (let [activity (session/get :activity)]
-    (if (= activity :review)
+  (let [ac (session/get :active)]
+    (if (= (:activity ac) :review)
       ;; simple text review
       (slurp (:url req))
       ;; else cloze test
@@ -218,6 +223,7 @@
       "next"    (event-next)
       "back"    (event-back)
       "ended"   (event-ended (:data params))
+      "stop"    (event-stop)
       [])
   )
 )
@@ -231,7 +237,7 @@
   (GET "/play-get-text" request (play-get-text (:params request)))
   (POST "/play-post-user-event" request (play-post-user-event (:params request)))
   (GET "/player" request (player (:params request)))
-;;  (GET "/logout" []
-;;       (shutdown)
-;;       nil)
+  (GET "/logout" []
+       (shutdown)
+       nil)
 )

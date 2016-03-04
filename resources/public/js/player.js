@@ -201,8 +201,7 @@ this.AudioPlayerUI = (function() {
       this.total = 0;
 
       // words seen
-      this.good = [];
-      this.bad  = [];
+      this.words = [];
 
       this.clozeCount = 0;
       this.timer = null;
@@ -299,11 +298,10 @@ AudioPlayerUI.prototype.playEnded = function() {
     //  statistics
     this.total += this.score;
 
-    results = {score: this.score, total: this.total, good: this.good, bad: this.bad};
+    results = {score: this.score, total: this.total, words: this.words};
 
     // words seen
-    this.good = [];
-    this.bad  = [];
+    this.words = [];
 
     this.clozeCount = 0;
     this.score = 0;
@@ -323,11 +321,11 @@ AudioPlayerUI.prototype.recordWord = function( text, word ) {
   // Update score for this file and build list of words 
   if ( text == word ) {
     this.score += scoreGreen;
-    this.good.push(word);
+    this.words.push( [word, scoreGreen] );
   }
   else {
     this.score += scoreRed;
-    this.bad.push(word);
+    this.words.push( [word, scoreRed] );
   }
 
   this.clozeCount--;
@@ -406,6 +404,11 @@ AudioPlayerUI.prototype.setInfoLine = function(s) {
 }
 
 
+AudioPlayerUI.prototype.redirect = function( url ) {
+  window.location.href = url;
+}
+
+
 AudioPlayerUI.prototype.handleServerPost = function( event ) {
   console.log("handleServerPost: " + event.target.id);
   console.log(event);
@@ -456,7 +459,7 @@ AudioPlayerUI.prototype.handleEvent = function( event ) {
 
 AudioPlayerUI.prototype._bindEvents = function() {
   this.$playbutton.on("click", $.proxy(this, "togglePlayPause"));
-  this.$stopButton.on("click", $.proxy(this, "stopPlayer"));
+//  this.$stopButton.on("click", $.proxy(this, "stopPlayer"));
   this.$loopButton.on("click", $.proxy(this, "toggleLoopMode"));
   this.$replayButton.on("click", $.proxy(this, "replayTrack"));
   this.$progressContainer.on("mouseup", $.proxy(this, "seek"));
@@ -472,7 +475,7 @@ AudioPlayerUI.prototype._bindEvents = function() {
 
 AudioPlayerUI.prototype._unbindEvents = function() {
   this.$playbutton.off("click");
-  this.$stopButton.off("click");
+//  this.$stopButton.off("click");
   this.$loopButton.off("click");
   this.$replayButton.off("click");
   this.$progressContainer.off("mouseup");

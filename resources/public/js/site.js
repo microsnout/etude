@@ -70,15 +70,26 @@ Controler.prototype.setInfoLine = function(s) {
 }
 
 
+Controler.prototype.redirect = function( url ) {
+  window.location.href = url;
+}
+
+
 Controler.prototype.handleServerPost = function( event ) {
   console.log("handleServerPost: " + event.target.id);
 
   // Save context of this obj for the callback func
   var _this = this;
 
-  $.post("/ctl-post-user-event", { id: event.target.id }, function(data) {
-//      console.log("Post ret:");
-//      console.log(data);
+  var params = {};
+
+  $('.table-x').each( function(index) {
+    params[$(this).attr('id')] = $(this).find('input:checked').attr("data-id");
+  });
+
+  $.post("/ctl-post-user-event", { id: event.target.id, data: params }, function(data) {
+      console.log("Post ret:");
+      console.log(data);
 
       for ( i=0 ; i < data.length ; i++ ) {
         var args = data[i];
@@ -94,9 +105,9 @@ Controler.prototype.handleEvent = function( event ) {
 
 
 Controler.prototype._bindEvents = function() {
-  this.$addButton.on("click", $.proxy(this, "addControl"));
-  this.$subButton.on("click", $.proxy(this, "subControl"));
-  this.$playButton.on("click", $.proxy(this, "playControl"));
+//  this.$addButton.on("click", $.proxy(this, "addControl"));
+//  this.$subButton.on("click", $.proxy(this, "subControl"));
+//  this.$playButton.on("click", $.proxy(this, "playControl"));
     
   // Capture click events for all controls with class "server"
   $(this.el).find(".server").on("click", $.proxy(this.handleServerPost, this))  
@@ -104,9 +115,9 @@ Controler.prototype._bindEvents = function() {
 
 
 Controler.prototype._unbindEvents = function() {
-  this.$addButton.off("click");
-  this.$subButton.off("click");
-  this.$playButton.off("click");
+//  this.$addButton.off("click");
+//  this.$subButton.off("click");
+//  this.$playButton.off("click");
   
   $(this.el).find(".server").off("click", this.handleServerPost); 
 };
