@@ -65,7 +65,7 @@
 (defn create-new-session* [db setname activity dataset mingap]
   (update-session* 
     db 
-    {:setname setname :activity (name activity) :dataset (json/write-str dataset) :mingap mingap
+    {:setname (name setname) :activity (name activity) :dataset (json/write-str dataset) :mingap mingap
      :start "CURRENT_TIMESTAMP" :pindex 0 }
   )
 )

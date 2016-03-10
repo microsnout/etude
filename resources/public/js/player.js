@@ -181,6 +181,16 @@ const redShift   = 16;
 
 this.AudioPlayerUI = (function() {
 
+    AudioPlayerUI.States = {
+      Ready:    0,
+      Loading:  1,
+      Playing:  2,
+      Paused:   3,
+      Waiting:  4,
+      Ended:    5,
+      Error:    9
+    };
+
     function AudioPlayerUI(options) {
 
       // Set options
@@ -204,7 +214,10 @@ this.AudioPlayerUI = (function() {
       this.words = [];
 
       this.clozeCount = 0;
+      this.clozePlay = false;
       this.timer = null;
+
+      this.state = AudioPlayerUI.States.Ready;
     };
 
 
@@ -253,8 +266,10 @@ AudioPlayerUI.prototype.AudioPlayerUpdateState = function() {
 
   if (this.audioPlayer.isPlaying()) {
     this.$playbutton.html("2");
+    this.state = AudioPlayerUI.States.Playing;
   } else {
     this.$playbutton.html("1");
+    this.state = AudioPlayerUI.States.Paused;
   }
 };
 
@@ -287,7 +302,29 @@ AudioPlayerUI.prototype.toggleLoopMode = function() {
 
 AudioPlayerUI.prototype.replayTrack = function() {
   this.audioPlayer.seekTo(0);
+
+  if ( this.state == AudioPlayerUI.States.Paused )
+    this.audioPlayer.play();
 };
+
+
+AudioPlayerUI.prototype.updateScore = function() {
+
+  if ( this.clozePlay ) {
+    // Build new score text to display
+    var txt = 
+      "Score: " + 
+      "<span style=color:green>" + (this.score & greenMask) + "</span>" + 
+      "-" +
+      "<span style=color:red>" + (this.score >>> redShift) + "</span>" +
+      "  Total: " + 
+      "<span style=color:green>" + (this.total & greenMask) + "</span>" + 
+      "-" +
+      "<span style=color:red>" + (this.total >>> redShift) + "</span>";
+
+    $('#play-score').html(txt);
+  }
+}
 
 
 AudioPlayerUI.prototype.playEnded = function() {
@@ -297,14 +334,9 @@ AudioPlayerUI.prototype.playEnded = function() {
   if ( this.score ) {
     //  statistics
     this.total += this.score;
+    this.updateScore();
 
     results = {score: this.score, total: this.total, words: this.words};
-
-    // words seen
-    this.words = [];
-
-    this.clozeCount = 0;
-    this.score = 0;
 
     if ( this.timer ) {
       clearTimeout(this.timer);
@@ -314,6 +346,8 @@ AudioPlayerUI.prototype.playEnded = function() {
 
   // Notify server that play ended 
   this.handleServerPost( {target: {id: "ended"}, data: results} );
+
+  this.state = AudioPlayerUI.States.Ended;
 };
 
 
@@ -341,18 +375,7 @@ AudioPlayerUI.prototype.recordWord = function( text, word ) {
     }, 5000);
   }
 
-  // Build new score text to display
-  var txt = 
-    "Score: " + 
-    "<span style=color:green>" + (this.score & greenMask) + "</span>" + 
-    "-" +
-    "<span style=color:red>" + (this.score >>> redShift) + "</span>" +
-    "  Total: " + 
-    "<span style=color:green>" + (this.total & greenMask) + "</span>" + 
-    "-" +
-    "<span style=color:red>" + (this.total >>> redShift) + "</span>";
-
-  $('#play-score').html(txt);
+  this.updateScore();
 };
 
 
@@ -361,6 +384,7 @@ AudioPlayerUI.prototype.loadText = function( url ) {
 
   // Save context of this obj for the callback func
   var _this = this;
+  var _focus = undefined;
 
   $.get("/play-get-text", { url: url}, function(data) {
       _this.apiScrollpane.getContentPane().html(data);
@@ -368,25 +392,40 @@ AudioPlayerUI.prototype.loadText = function( url ) {
 
       // Count of zero means Review mode
       _this.clozeCount = $("input.cloze").length;
+      _this.clozePlay = _this.clozeCount > 0;
+      _this.score = 0;
+      _this.words = [];
+      _this.updateScore();
 
       // Focus the first input field and make return same as tab
-      $("#textbox").mousedown (
+      $("#textbox").mousedown ( function(e) { 
           // Prevent mouse click in box from defocusing current input field
-          function(e) { e.preventDefault(); }
-      ).find("input.cloze").mousedown( 
+          e.preventDefault(); 
+          // Restore the focus to last input box focused
+          if ( _focus != undefined )
+            _focus.focus();
+      }).find("input.cloze").mousedown( 
           // Stop mouse events within input fields
-          function(e) { e.preventDefault(); }
-      ).pressEnter( 
-          // Make enter act the same as tab
-          function() { $(this).next().focus(); }
-      ).focusout( function() {
+          function(e) { e.preventDefault(); 
+      }).pressEnter( function() { 
           var text = $(this).val();
           var word = $(this).attr("data-word");
           _this.recordWord(text, word);
           $(this).css({ 'font-weight': 'bold' }).css( 
               "color", 
               word == text ? "green" : "red");
+          $(this).next().focus();
+      }).focus( function() {
+          _focus = $(this);
+      }).focusout( function() {
+        // May not need this
       }).eq(0).focus();
+
+      $('#controls').mouseup( function() {
+        // Restore the focus to last input box focused
+        if ( _focus != undefined )
+          _focus.focus();
+      });
    });
 }
 
@@ -396,6 +435,7 @@ AudioPlayerUI.prototype.loadAudio = function( url ) {
 
   this.$progressBar.css( {width: 0} );
   this.audioPlayer.setAudioSrc( url );
+  this.state = AudioPlayerUI.States.Loading;
 }
 
 
@@ -445,6 +485,7 @@ AudioPlayerUI.prototype.handleEvent = function( event ) {
         // Notify server that play ended 
         _this.playEnded();
       }, 5000);
+      this.state = AudioPlayerUI.States.Waiting;
     }
     else {
       // Notify server that play ended 
