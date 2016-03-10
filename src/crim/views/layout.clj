@@ -24,7 +24,10 @@
         (image {:width "64", :height "64", :float 'right'} "/img/drapeau_Quebec.gif")]
       [:nav#boxnav
          [:ul.row-list.navrow
-            [:li (link-to "/" "Home")] [:li (link-to "/guestbook" "Guestbook")] ]]
+            [:li (link-to "/" "Home")] 
+            [:li (link-to "/player" "Player")]
+            [:li (link-to "/words" "Words")]
+            [:li (link-to "/guestbook" "Guestbook")] ]]
    ]
   ]
 )

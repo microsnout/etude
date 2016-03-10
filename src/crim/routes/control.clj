@@ -15,15 +15,10 @@
             ))
 
 (declare get-control-html)
+(declare get-words-html)
 
-(defn control []
-  (layout/common 
-      :include-js "js/site.js"
-      [:br]
-      [:div#info-line]
-      [:div#textbox [:div#display.scroll-pane (get-control-html)]]
-
-      [:div#controls        
+(defn get-control-buttons [] 
+  (html5
         [:ul.ctl-list
           [:li [:a {:role "button", :href "#", :id "add", :class "server"} "="]]
           [:li [:a {:role "button", :href "#", :id "sub", :class "server"} "-"]]
@@ -34,7 +29,32 @@
         [:ul.ctl-list
           [:li [:a {:role "button", :href "#", :id "play", :class "server"} "1"]]
         ]
-      ]
+  )
+)
+
+
+(defn get-words-buttons [] 
+  (html5
+        [:ul.ctl-list
+          [:li [:a {:role "button", :href "#", :id "add", :class "server"} "="]]
+          [:li [:a {:role "button", :href "#", :id "sub", :class "server"} "-"]]
+        ]
+
+        [:span.vert-split]
+
+        [:ul.ctl-list
+          [:li [:a {:role "button", :href "#", :id "play", :class "server"} "1"]]
+        ]
+  )
+)
+
+(defn control [content buttons]
+  (layout/common 
+      :include-js "js/site.js"
+      [:br]
+      [:div#info-line]
+      [:div#textbox [:div#display.scroll-pane content]]
+      [:div#controls buttons]
   )
 )
 
@@ -46,6 +66,10 @@
           [:li userid "   (" pass ")"])]
      [:br]
    )
+)
+
+
+(defn words []
 )
 
 
@@ -174,6 +198,12 @@
 )
 
 
+(defn get-words-html []
+  (html5
+    [:div.flexContainer]
+  )
+)
+
 ;; Client event handlers
 
 (defn gen-cmd-resp []
@@ -242,8 +272,9 @@
 (defroutes control-routes
   (GET "/ctl-get-control-html" request (get-control-html))
   (POST "/ctl-post-user-event" request (post-user-event (:params request)))
-  (GET "/control" [] (control))
+  (GET "/control" [] (control (get-control-html) (get-control-buttons)))
   (GET "/userlist" [] (userlist))
+  (GET "/words" [] (control (get-words-html) (get-words-buttons)))
   (GET "/logout" []
        (shutdown)
        nil)
