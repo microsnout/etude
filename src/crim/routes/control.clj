@@ -198,9 +198,29 @@
 )
 
 
+(defn score-green [s]
+  (bit-and s 0xFFFF))
+
+(defn score-red [s]
+  (bit-shift-right s 16))
+
+
 (defn get-words-html []
-  (html5
-    [:div.flexContainer]
+  (let [id (session/get :user)]
+    (html5
+      (table-x :wordT 
+               (udb/with-user  id (udb/get-words))
+               {}
+               "Word" "120px" :word
+               "Percent" "50px" 
+                  (fn [w]
+                    (let [s (:score w)]
+                      (quot (* 100 (score-green s))
+                            (+ (score-green s) (score-red s)))))
+               "Good" "50px" #(score-green (:score %))
+               "Bad"  "50px" #(score-red (:score %))
+      )
+    )
   )
 )
 

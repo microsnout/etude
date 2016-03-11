@@ -104,8 +104,7 @@
 
 (defn get-words* [db]
   (jdbc/query db 
-              ["SELECT * FROM wordT ORDER BY word ASC"] 
-              :row-fn :word))
+              ["SELECT * FROM wordT ORDER BY word ASC"] ))
 
 (defmacro get-words []
   `(get-words* ~'UserDB))

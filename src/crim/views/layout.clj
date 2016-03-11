@@ -57,6 +57,7 @@
          (include-js "//ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js")
          (include-js "/js/jquery.jscrollpane.min.js")
          (include-js "/js/jquery.mousewheel.js")
+         (include-js "/js/jquery.json.js")
          (include-js filespec)]
       [:body (get-header) [:main tail] (get-footer)]
     )
@@ -70,6 +71,7 @@
          (include-js "//ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js")]
          (include-js "/js/jquery.jscrollpane.min.js")
          (include-js "/js/jquery.mousewheel.js")
+         (include-js "/js/jquery.json.js")
       [:body (get-header) [:main main] (get-footer)]
     )
   )

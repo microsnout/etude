@@ -345,6 +345,8 @@ AudioPlayerUI.prototype.playEnded = function() {
   }
 
   // Notify server that play ended 
+  console.log("PlayEnded:");
+  console.log(results);
   this.handleServerPost( {target: {id: "ended"}, data: results} );
 
   this.state = AudioPlayerUI.States.Ended;
@@ -458,7 +460,7 @@ AudioPlayerUI.prototype.handleServerPost = function( event ) {
 
   var params = ( event.data == undefined ) ? 
                   { id: event.target.id } :
-                  { id: event.target.id, data: event.data };
+                  { id: event.target.id, data: $.toJSON(event.data) };
 
   $.post("/play-post-user-event", params, function(data) {
 //      console.log("Post ret:");

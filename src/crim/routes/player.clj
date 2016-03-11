@@ -95,18 +95,15 @@
     [id (session/get :user)
      ac (session/get :active)
      px (:pindex ac)
-     nx (mod (inc px) (count (:fileList (:dataset ac))))]
+     nx (mod (inc px) (count (:fileList (:dataset ac))))
+     rs (json/read-str results :key-fn keyword)]
 
     (update-pindex nx)
-    
+
     (udb/with-user id
-      (map 
-        (fn [[word score]] 
+      (doseq [[word score] (get rs :words)] 
           (udb/update-word word score))
-        (:words results)
-      )
     )
-    ;; Update user db here
     ;; Change code above to terminate play not restart
     
     (gen-cmd-resp)
