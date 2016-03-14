@@ -81,17 +81,6 @@
   })
 
 
-(def test-state
-  {
-    :playIndex   0
-    :audioPath   "data/crim/audio/"
-    :textPath    "resources/public/data/crim/text/"
-    :audioExt    ".m4a"
-    :textExt     ".txt"
-    :fileList    ["01_01" "01_02" "10_01" "01_10"]
-    :id3Title    false
-    })
-
 (defn scan-dataset [name]
   (let [root (str "resources/public/data/" name)
         dset (slurp (str root "/dataset.json"))
@@ -128,7 +117,6 @@
 
 
 (def data-sets (find-datasets))
-;;(defonce data-set (future (scan-dataset "offqc")))
 
 
 (defn table-x [ tableId recList options & args ]
@@ -212,11 +200,12 @@
                (udb/with-user  id (udb/get-words))
                {}
                "Word" "120px" :word
-               "Percent" "50px" 
+               "Percent" "60px" 
                   (fn [w]
                     (let [s (:score w)]
-                      (quot (* 100 (score-green s))
-                            (+ (score-green s) (score-red s)))))
+                      (str
+                        (quot (* 100 (score-green s))
+                              (+ (score-green s) (score-red s))) "%")))
                "Good" "50px" #(score-green (:score %))
                "Bad"  "50px" #(score-red (:score %))
       )
