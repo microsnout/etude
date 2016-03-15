@@ -290,21 +290,7 @@ AudioPlayerUI.prototype.stopPlayer = function() {
 };
 
 AudioPlayerUI.prototype.toggleLoopMode = function() {
-  if ( this.audioPlayer.el.loop ) {
-    this.$loopButton.removeClass( "buttonPushed" );
-    this.audioPlayer.el.loop = false;
-  }
-  else {
-    this.$loopButton.addClass( "buttonPushed" );
-    this.audioPlayer.el.loop = true;
-  }
-};
-
-AudioPlayerUI.prototype.replayTrack = function() {
-  this.audioPlayer.seekTo(0);
-
-  if ( this.state == AudioPlayerUI.States.Paused )
-    this.audioPlayer.play();
+  this.$loopButton.toggleClass( "buttonPushed" );
 };
 
 
@@ -329,9 +315,9 @@ AudioPlayerUI.prototype.updateScore = function() {
 
 AudioPlayerUI.prototype.playEnded = function() {
 
-  var results = undefined;
+  var results = { words: [] };
 
-  if ( this.score ) {
+  if ( this.clozePlay ) {
     //  statistics
     this.total += this.score;
     this.updateScore();
@@ -413,7 +399,9 @@ AudioPlayerUI.prototype.loadText = function( url ) {
           var text = $(this).val();
           var word = $(this).attr("data-word");
           _this.recordWord(text, word);
-          $(this).css({ 'font-weight': 'bold' }).css( 
+          if ( text != word )
+            $(this).val(word);
+          $(this).css( 
               "color", 
               word == text ? "green" : "red");
           $(this).next().focus();
@@ -502,9 +490,7 @@ AudioPlayerUI.prototype.handleEvent = function( event ) {
 
 AudioPlayerUI.prototype._bindEvents = function() {
   this.$playbutton.on("click", $.proxy(this, "togglePlayPause"));
-//  this.$stopButton.on("click", $.proxy(this, "stopPlayer"));
   this.$loopButton.on("click", $.proxy(this, "toggleLoopMode"));
-  this.$replayButton.on("click", $.proxy(this, "replayTrack"));
   this.$progressContainer.on("mouseup", $.proxy(this, "seek"));
 
   // Capture click events for all controls with class "server"
@@ -518,9 +504,7 @@ AudioPlayerUI.prototype._bindEvents = function() {
 
 AudioPlayerUI.prototype._unbindEvents = function() {
   this.$playbutton.off("click");
-//  this.$stopButton.off("click");
   this.$loopButton.off("click");
-  this.$replayButton.off("click");
   this.$progressContainer.off("mouseup");
   
   $(this.el).find(".server").off("click", this.handleServerPost); 

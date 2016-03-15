@@ -1,11 +1,11 @@
 (ns crim.views.layout
   (:require [hiccup.page :refer [html5 include-css include-js]]
             [hiccup.element :refer [image link-to]]
-            [noir.session :as session]))
+            [crim.util.context :refer :all]))
 
 
 (defn get-login-status []
-  (if-let [id (session/get :user)]
+  (if-let [id (get+ :user)]
     (list "User: " [:span.username id] " " (link-to {:class "footText"} "/logout" "Logout"))
     (list "User: -----" (link-to {:class "footText"} "/login" "Login"))
   )
@@ -46,33 +46,33 @@
 
 
 (defn common [& main]
-  (if-let [[keyw filespec & tail] (and (= (first main) :include-js) main)]
-    (html5
-      [:head
-         [:title "crim 0.1"]
-         (include-css "/css/jquery.jscrollpane.css")
-         (include-css "/css/jquery.jscrollpane.mytheme.css")
-         (include-css "/css/fonts/stylesheet.css")
-         (include-css "/css/screen.css")
-         (include-js "//ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js")
-         (include-js "/js/jquery.jscrollpane.min.js")
-         (include-js "/js/jquery.mousewheel.js")
-         (include-js "/js/jquery.json.js")
-         (include-js filespec)]
-      [:body (get-header) [:main tail] (get-footer)]
-    )
-    (html5
-      [:head
-         [:title "crim 0.1"]
-         (include-css "/css/jquery.jscrollpane.css")
-         (include-css "/css/jquery.jscrollpane.mytheme.css")
-         (include-css "/css/fonts/stylesheet.css")
-         (include-css "/css/screen.css")
-         (include-js "//ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js")]
-         (include-js "/js/jquery.jscrollpane.min.js")
-         (include-js "/js/jquery.mousewheel.js")
-         (include-js "/js/jquery.json.js")
-      [:body (get-header) [:main main] (get-footer)]
+  (loop
+    [keyw      (first main)
+     filespec  ()
+     tail      main]
+    (case keyw
+      :include-css
+      (recur (second (rest tail)) 
+             (into filespec (include-css (second tail)))
+             (rest (rest tail)))
+      :include-js
+      (recur (second (rest tail)) 
+             (into filespec (include-js (second tail)))
+             (rest (rest tail)))
+      (html5
+        [:head
+           [:title "crim 0.1"]
+           (include-css "/css/jquery.jscrollpane.css")
+           (include-css "/css/jquery.jscrollpane.mytheme.css")
+           (include-css "/css/fonts/stylesheet.css")
+           (include-css "/css/screen.css")
+           (include-js "//ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js")
+           (include-js "/js/jquery.jscrollpane.min.js")
+           (include-js "/js/jquery.mousewheel.js")
+           (include-js "/js/jquery.json.js")
+           filespec]
+        [:body (get-header) [:main tail] (get-footer)]
+      )
     )
   )
 )

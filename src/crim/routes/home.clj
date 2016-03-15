@@ -6,7 +6,7 @@
             [hiccup.element :refer :all]
             [crim.models.db :as db]
             [noir.response :refer [redirect]]
-            [noir.session :as session]))
+            [crim.util.context :refer :all]))
 
 (defn format-time [timestamp]
   (-> "dd/MM/yyyy"
@@ -25,7 +25,7 @@
           [:p.guests "- " [:cite.guests name]]
           [:time.guests (format-time timestamp)]])]
 
-   (if-let [id (session/get :user)]
+   (if-let [id (get+ :user)]
       (form-to [:post "/guestbook"]
         [:hr][:br]
         (label :message "Comment:")
@@ -38,7 +38,7 @@
 
 
 (defn home []
-  (if (session/get :user)
+  (if (get+ :user)
     (redirect "/control")
     (layout/common
         [:div#homebox
@@ -52,7 +52,7 @@
 
 
 (defn save-message [message]
- (let [name (session/get :user)]
+ (let [name (get+ :user)]
    (cond
      (empty? name)
      (guestbook message "Error: No user id")

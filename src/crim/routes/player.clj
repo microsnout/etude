@@ -4,12 +4,12 @@
             [crim.models.userdb :as udb]
             [hiccup.form :refer :all]
             [hiccup.element :refer :all]
-            [noir.session :as session]
             [noir.response :refer [redirect]]
             [clojure.string :as st]
             [clojure.java.io :as io]
             [clojure.data.json :as json]
             [claudio.id3 :as id3]
+            [crim.util.context :refer :all]
             ))
 
 
@@ -26,9 +26,9 @@
           [:li [:a {:role "button", :href "#", :id "stop", :class "server"} "'"]]
           [:li [:a {:role "button", :href "#", :id "back", :class "server"} "7"]]
           [:li [:a {:role "button", :href "#", :id "play-pause"} "1"]]
-          [:li [:a {:role "button", :href "#", :id "replay"} "9"]]
+          [:li [:a {:role "button", :href "#", :id "replay", :class "server"} "9"]]
           [:li [:a {:role "button", :href "#", :id "next", :class "server"} "8"]]
-          [:li [:a {:role "button", :href "#", :id "loop"} "("]]
+          [:li [:a {:role "button", :href "#", :id "loop", :class "server"} "("]]
         ]
 
         [:span.vert-split]
@@ -46,7 +46,7 @@
 ;; Client event handlers
 
 (defn gen-cmd-resp []
-  (let [ac (session/get :active)
+  (let [ac (get+ :active)
         sn (:setname ac)
         px (:pindex ac)
         ds (:dataset ac)
@@ -55,6 +55,9 @@
         ap (str (:audioPath ds) fn (:audioExt ds))
         io (clojure.java.io/file (str "resources/public/" ap))
         il (str sn ": " (if (:id3Title ds) (:title (id3/read-tag io)) fn))]
+
+    (set+ :refpath (str sn ":" fn))
+
     [
       [:loadText tp]
       [:loadAudio ap]
@@ -64,26 +67,23 @@
 )
 
 
-(defn update-pindex[px]
-  (session/assoc-in! (list :active :pindex) px))
-
-
 (defn event-startup []
   ;; Turn off debugging output from claudio
   (.setLevel (java.util.logging.Logger/getLogger "org.jaudiotagger")
            java.util.logging.Level/OFF)
 
+  (set+ :loopMode false)
   (gen-cmd-resp)
 )
 
 
 (defn event-next []
-  (let
-    [user (session/get :user)
-     ac (session/get :active)
-     px (:pindex ac)
-     nx (mod (inc px) (count (:fileList (:dataset ac))))]
-    (update-pindex nx)
+  (let+
+    [user :user
+     ds   :active:dataset
+     px   :active:pindex
+     nx   (mod (inc px) (count (:fileList ds)))]
+    (set+ :active:pindex nx)
     (udb/with-user user (udb/update-play-index nx))
     (gen-cmd-resp)
   )
@@ -91,18 +91,22 @@
 
 
 (defn event-ended [ results ]
-  (let
-    [id (session/get :user)
-     ac (session/get :active)
-     px (:pindex ac)
-     nx (mod (inc px) (count (:fileList (:dataset ac))))
+  (println (str "event-ended: " results))
+  (let+
+    [id :user
+     ds :active:dataset
+     px :active:pindex
+     rp :refpath
+     nx (mod (inc px) (count (:fileList ds)))
      rs (json/read-str results :key-fn keyword)]
 
-    (update-pindex nx)
+    (if (not (get+ :loopMode)) 
+      (set+ :active:pindex nx))
 
     (udb/with-user id
       (doseq [[word score] (get rs :words)] 
-          (udb/update-word word score))
+          (udb/update-word word score)
+          (udb/add-ref word rp))
     )
     ;; Change code above to terminate play not restart
     
@@ -112,12 +116,12 @@
 
 
 (defn event-back []
-  (let
-    [user (session/get :user)
-     ac (session/get :active)
-     px (:pindex ac)
-     nx (mod (dec px) (count (:fileList (:dataset ac))))]
-    (update-pindex nx)
+  (let+
+    [user :user
+     ds   :active:dataset 
+     px   :active:pindex
+     nx   (mod (dec px) (count (:fileList ds)))]
+    (set+ :active:pindex nx)
     (udb/with-user user (udb/update-play-index nx))
     (gen-cmd-resp)
   )
@@ -125,15 +129,23 @@
 
 
 (defn event-stop []
-  (let [user (session/get :user)
-        ac (session/get :active)]
-    (println "event-stop:")
+  (let [user (get+ :user)
+        ac   (get+ :active)]
     (udb/with-user user 
       (udb/delete-session 1))
-    (session/put! :active nil)
+    (set+ :active nil)
     [[:redirect "/control"]]
   )
 )
+
+
+(defn event-loop []
+  (set+ :loopMode (not (get+ :loopMode)))
+)
+
+
+(defn event-replay []
+  (gen-cmd-resp))
 
 
 ;; ******
@@ -181,7 +193,7 @@
                 (.substring txt lastx startx) 
                 (format 
                     "<input type='text' class='cloze' spellcheck=false font-weight=bold size=%d data-word='%s'>" 
-                    (count wstr) (.toLowerCase wstr)))
+                    (+ 1 (count wstr)) (.toLowerCase wstr)))
               endx
               min-gap
             )
@@ -197,7 +209,7 @@
 
 
 (defn play-get-text [req]
-  (let [ac (session/get :active)]
+  (let [ac (get+ :active)]
     (if (= (:activity ac) :review)
       ;; simple text review
       (slurp (:url req))
@@ -221,6 +233,8 @@
       "back"    (event-back)
       "ended"   (event-ended (:data params))
       "stop"    (event-stop)
+      "loop"    (event-loop)
+      "replay"  (event-replay)
       [])
   )
 )

@@ -204,10 +204,10 @@ cite.guests { font-size: 12px }
     border-radius: 10px;
 
     line-height: 1.6;
-    font-family: "Trebuchet MS";
+    font-family: "luxi_monoregular";
     font-weight: normal;
     font-style: normal;
-    font-size: 14px;
+    font-size: 13px;
     color: black;
 }
 
@@ -337,7 +337,7 @@ td {
 /* Cloze fields */
 
 .cloze {
-    font-family: 'Trebuchet MS';
+    font-family: 'luxi_monoregular';
     font-size: 14px;
 }
 

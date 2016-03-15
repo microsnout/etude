@@ -48,23 +48,6 @@ Controler.prototype.loadControlHtml = function() {
 }
 
 
-Controler.prototype.playControl = function() {
-  console.log("playControl:");
-  var parms = "";
-  var space = "?";
-
-  $('.table-x').each( function(index) {
-    parms += space;
-    parms += $(this).attr('id');
-    parms += "=";
-    parms += $(this).find('input:checked').attr("data-id");
-    space = "&";
-  });
-
-  window.location.href = "/player" + parms; 
-}
-
-
 Controler.prototype.setInfoLine = function(s) {
   $('#info-line').html( "<i>File: </i>" + s );
 }
@@ -107,7 +90,6 @@ Controler.prototype.handleEvent = function( event ) {
 Controler.prototype._bindEvents = function() {
 //  this.$addButton.on("click", $.proxy(this, "addControl"));
 //  this.$subButton.on("click", $.proxy(this, "subControl"));
-//  this.$playButton.on("click", $.proxy(this, "playControl"));
     
   // Capture click events for all controls with class "server"
   $(this.el).find(".server").on("click", $.proxy(this.handleServerPost, this))  
@@ -117,7 +99,6 @@ Controler.prototype._bindEvents = function() {
 Controler.prototype._unbindEvents = function() {
 //  this.$addButton.off("click");
 //  this.$subButton.off("click");
-//  this.$playButton.off("click");
   
   $(this.el).find(".server").off("click", this.handleServerPost); 
 };

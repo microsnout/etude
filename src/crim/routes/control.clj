@@ -7,11 +7,11 @@
             [hiccup.page :refer [html5]]
             [hiccup.form :refer :all]
             [hiccup.element :refer :all]
-            [noir.session :as session]
             [noir.response :refer [redirect]]
             [clojure.string :as st]
             [clojure.java.io :as io]
             [clojure.data.json :as json]
+            [crim.util.context :refer :all]
             ))
 
 (declare get-control-html)
@@ -179,7 +179,7 @@
       [:div.flexItem
         (table-x :activity '("Review" "Cloze") {:radio ""}
           "" "40px" #(st/lower-case %) 
-          "Session Type" "100px" (fn [x] x))
+          "Session Type" "120px" (fn [x] x))
       ]
     ]
   )
@@ -194,7 +194,7 @@
 
 
 (defn get-words-html []
-  (let [id (session/get :user)]
+  (let [id (get+ :user)]
     (html5
       (table-x :wordT 
                (udb/with-user  id (udb/get-words))
@@ -216,7 +216,7 @@
 ;; Client event handlers
 
 (defn gen-cmd-resp []
-  (let [st (session/get :state)]
+  (let [st (get+ :state)]
     [
     ]
   )
@@ -224,8 +224,8 @@
 
 
 (defn event-startup []
-  (if (empty? (session/get :state))
-    (session/put! :state data-sets))
+  (if (empty? (get+ :state))
+    (set+ :state data-sets))
 
   ;; Return commands to client
   []
@@ -234,7 +234,7 @@
 
 (defn event-add []
   (let
-    [st (session/get :state)]
+    [st (get+ :state)]
   []
   )
 )
@@ -242,20 +242,20 @@
 
 (defn event-sub []
   (let
-    [st (session/get :state)]
+    [st (get+ :state)]
   []
   )
 )
 
 
 (defn event-play [ args ]
-  (let [user     (session/get :user)
+  (let [user     (get+ :user)
         setname  (keyword (:dataset args))
         activity (:activity args)]
     (println "event-play:")
     (udb/with-user user
        (udb/create-new-session setname (keyword activity) (setname data-sets))
-       (session/put! :active (udb/get-current-session)))
+       (set+ :active (udb/get-current-session)))
     [[:redirect "/player"]]
   ) 
 )

@@ -24,9 +24,9 @@
 
     (jdbc/create-table-ddl
       :refT
-      [:wordid "INTEGER"]
+      [:word   "TEXT"]
       [:path   "TEXT"]
-      ["UNIQUE" "(wordid, path) ON CONFLICT IGNORE"]
+      ["UNIQUE" "(word, path) ON CONFLICT IGNORE"]
     )
 
     (jdbc/create-table-ddl
@@ -137,9 +137,7 @@
   `(update-word* ~'UserDB ~wordStr ~newScore))
 
 (defn add-ref* [db word pathStr]
-  (let [id  (get-wordid* db word)
-        idx (if (nil? id) (add-word* db word) id) 
-        res (jdbc/insert! db :refT {:wordid idx, :path pathStr})]
+  (let [res (jdbc/insert! db :refT {:word word, :path pathStr})]
     (get (first res) (keyword "last_insert_rowid()"))
   )
 )
@@ -147,13 +145,10 @@
 (defmacro add-ref [word pathStr]
   `(add-ref* ~'UserDB ~word ~pathStr))
 
-(defn get-refs* [db wordStr]
-  (if-let [id (get-wordid* db wordStr)]
-    (jdbc/query db
-                ["select path from refT where wordid = ?" id]
-                :row-fn :path)
-    ;; else
-    ()))
+(defn get-refs* [db word]
+  (jdbc/query db
+                ["select path from refT where word = ?" word]
+                :row-fn :path))
 
 (defmacro get-refs [wordStr]
   `(get-refs* ~'UserDB ~wordStr))

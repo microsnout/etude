@@ -5,8 +5,8 @@
             [hiccup.element :refer :all]
             [crim.models.db :as db]
             [crim.models.userdb :as udb]
+            [crim.util.context :refer :all]
             [noir.response :refer [redirect]]
-            [noir.session :as session]
             [noir.validation :refer [rule errors? has-value? on-error]]))
 
 
@@ -66,9 +66,9 @@
           (let
             [st (:state user {})
              cs (udb/with-user id (udb/get-current-session))]
-            (session/put! :user id)
-            (session/put! :state st)
-            (session/put! :active cs)
+            (set+ :user id)
+            (set+ :state st)
+            (set+ :active cs)
             (redirect (if cs "/player" "/control")))
           (do
             (rule false [:pass "Invalid password"])
@@ -92,8 +92,8 @@
       (try
         ;; Create new user with empty state
         (db/create-user userid pass1)
-        (session/put! :user userid)
-        (session/put! :state {})
+        (set+ :user userid)
+        (set+ :state {})
         ;; Create users database 
         (println (str "create tables: " userid ))
         (udb/with-user userid
@@ -107,11 +107,11 @@
 
 
 (defn handle-logout []
-  (if-let [id (session/get :user)]
+  (if-let [id (get+  :user)]
     (do
       ;; Save current user state in db and clear session
-      (db/update-user-state id (session/get :state))
-      (session/clear!)
+      (db/update-user-state id (get+ :state))
+      (clear+)
       (redirect "/"))
     (println "LOGOUT no user")
   )
