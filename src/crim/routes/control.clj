@@ -53,7 +53,7 @@
       :include-js "js/site.js"
       [:br]
       [:div#info-line]
-      [:div#textbox [:div#display.scroll-pane content]]
+      [:div#textbox content]
       [:div#controls buttons]
   )
 )
@@ -92,7 +92,6 @@
 
     {
       :setName    name
-      :playIndex  0
       :audioPath  (str "data/" name "/audio/")
       :textPath   (str "resources/public/data/" name "/text/")
       :audioExt   (:audioExt spec) 
@@ -168,20 +167,21 @@
 )
 
 (defn get-control-html []
-  (html5
-    [:div.flexContainer
-      [:div.flexItem
-        (table-x :dataset (vals data-sets) {:radio ""} 
-          "" "40px" :setName
-          "Data Set" "100px" :setName 
-          "Size" "50px" #(count (:fileList %)))
+  (let
+    [data
+      (for [ds (vals data-sets)
+            ac ["Review" "Cloze"]]
+        (assoc ds :activity ac))]
+    (html5
+      [:div#display.flexContainer
+        [:div.flexItem
+          (table-x :datasetT data {:radio ""} 
+            "" "40px" #(str (:setName %) ":" (st/lower-case(:activity %)))
+            "Data Set" "200px" #(str (:setName %) " - " (:activity %))
+            "Size" "50px" #(count (:fileList %)))
+        ]
       ]
-      [:div.flexItem
-        (table-x :activity '("Review" "Cloze") {:radio ""}
-          "" "40px" #(st/lower-case %) 
-          "Session Type" "120px" (fn [x] x))
-      ]
-    ]
+    )
   )
 )
 
@@ -196,19 +196,21 @@
 (defn get-words-html []
   (let [id (get+ :user)]
     (html5
-      (table-x :wordT 
-               (udb/with-user  id (udb/get-words))
-               {}
-               "Word" "120px" :word
-               "Percent" "60px" 
-                  (fn [w]
-                    (let [s (:score w)]
-                      (str
-                        (quot (* 100 (score-green s))
-                              (+ (score-green s) (score-red s))) "%")))
-               "Good" "50px" #(score-green (:score %))
-               "Bad"  "50px" #(score-red (:score %))
-      )
+      [:div#display.scroll-pane
+        (table-x :wordT 
+                 (udb/with-user  id (udb/get-words))
+                 {}
+                 "Word" "120px" :word
+                 "Percent" "60px" 
+                    (fn [w]
+                      (let [s (:score w)]
+                        (str
+                          (quot (* 100 (score-green s))
+                                (+ (score-green s) (score-red s))) "%")))
+                 "Good" "50px" #(score-green (:score %))
+                 "Bad"  "50px" #(score-red (:score %))
+        )
+      ]
     )
   )
 )
@@ -250,11 +252,12 @@
 
 (defn event-play [ args ]
   (let [user     (get+ :user)
-        setname  (keyword (:dataset args))
-        activity (:activity args)]
+        data     (st/split (:datasetT args) #":")
+        setname  (keyword (first data))
+        activity (keyword (second data))]
     (println "event-play:")
     (udb/with-user user
-       (udb/create-new-session setname (keyword activity) (setname data-sets))
+       (udb/create-new-session setname activity (setname data-sets))
        (set+ :active (udb/get-current-session)))
     [[:redirect "/player"]]
   ) 
